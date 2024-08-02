@@ -1,0 +1,6 @@
+@EduCraftAPI_HostAddress = http://localhost:5108
+
+GET {{EduCraftAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
