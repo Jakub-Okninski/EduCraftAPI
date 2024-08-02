@@ -11,7 +11,7 @@ using System.Text;
 
 namespace EduCraftAPI.Controllers
 {
-    [Route("api/account")]
+    [Route("account")]
     public class AuthController : Controller
     {
         private readonly DataDbContext _context;
@@ -27,26 +27,23 @@ namespace EduCraftAPI.Controllers
         [HttpPost("register")]
         public ActionResult Register([FromBody] RegisterUserDto registerUserDto)
         {
-            if (registerUserDto == null || string.IsNullOrWhiteSpace(registerUserDto.Username) ||
-                string.IsNullOrWhiteSpace(registerUserDto.Password) ||
-                string.IsNullOrWhiteSpace(registerUserDto.FirstName) ||
-                string.IsNullOrWhiteSpace(registerUserDto.LastName))
+            if (!ModelState.IsValid)
             {
-                return BadRequest("All fields are required.");
+                return BadRequest(ModelState);
             }
 
-            var existingUser = _context.Users.FirstOrDefault(u => u.Username == registerUserDto.Username);
+            var existingUser = _context.Users.FirstOrDefault(u => u.Email == registerUserDto.Email);
             if (existingUser != null)
             {
-                return Conflict("Username or password already exists.");
+                return Conflict("Konto o takim adresie e-mail już istnieje.");
             }
 
             User newUser = new User()
             {
-                Username = registerUserDto.Username,
+                Email = registerUserDto.Email,
                 FirstName = registerUserDto.FirstName,
                 LastName = registerUserDto.LastName,
-                RoleID = registerUserDto.ID,
+                RoleID = _context.Roles.FirstOrDefault(u => u.Name == "User").RoleID
             };
 
             var hashedPassword = _passwordHasher.HashPassword(newUser, registerUserDto.Password);
@@ -59,17 +56,17 @@ namespace EduCraftAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "An error occurred while processing your request.");
+                return StatusCode(500, "Internal Server Error");
             }
 
-            return Ok("User registered successfully.");
+            return Created();
         }
 
 
         [HttpPost("login")]
         public ActionResult Login([FromBody] LoginDto loginDto)
         {
-            var user = _context.Users.Include(u=>u.Role).FirstOrDefault(u => u.Username == loginDto.Username);
+            var user = _context.Users.Include(u=>u.Role).FirstOrDefault(u => u.Email == loginDto.Username);
             if (user is null)
             {
                 return Unauthorized("Invalid username or password.");

@@ -26,7 +26,7 @@ namespace EduCraftAPI.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<User>()
-                .HasIndex(u => u.Username)
+                .HasIndex(u => u.Email)
                 .IsUnique();
         }
 

@@ -110,6 +110,10 @@ namespace EduCraftAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserID"));
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -125,16 +129,12 @@ namespace EduCraftAPI.Migrations
                     b.Property<int>("RoleID")
                         .HasColumnType("int");
 
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("UserID");
 
-                    b.HasIndex("RoleID");
-
-                    b.HasIndex("Username")
+                    b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("RoleID");
 
                     b.ToTable("User", (string)null);
                 });
