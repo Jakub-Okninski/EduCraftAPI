@@ -25,6 +25,11 @@ namespace EduCraftAPI.Data
             modelBuilder.Entity<User>().ToTable("User");
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
         }
+
+       
     }
 }

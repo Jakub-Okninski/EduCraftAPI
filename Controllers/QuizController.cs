@@ -1,6 +1,7 @@
 ﻿using EduCraftAPI.Data;
 using EduCraftAPI.Entities;
 using EduCraftAPI.Entities.Quiz;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
@@ -23,6 +24,7 @@ namespace EduCraftAPI.Controllers
             return Ok(quizzes);
         }
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<Quiz>> Quiz(int id)
         {
             var quiz = await _context.Quizzes
@@ -34,22 +36,5 @@ namespace EduCraftAPI.Controllers
             return Ok(quiz);
         }
 
-
-
-        [HttpPost]
-        public async Task<ActionResult<IEnumerable<Quiz>>> Quiz([FromBody] Quiz quiz)
-        {
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            await _context.Quizzes.AddAsync(quiz);
-            await _context.SaveChangesAsync();
-
-
-            return Ok(await _context.Quizzes.ToListAsync());
-        }
     }
 }

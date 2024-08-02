@@ -1,7 +1,12 @@
 
 using EduCraftAPI.Data;
 using EduCraftAPI.Entities;
+using EduCraftAPI.Entities.User;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace EduCraftAPI
 {
@@ -21,8 +26,32 @@ namespace EduCraftAPI
                     });
             });
             // Add services to the container.
+            var authenticationSetting = new AuthenticationSettings();
+            builder.Services.AddSingleton(authenticationSetting);
+            builder.Services.AddAuthentication(option =>
+            {
+                option.DefaultAuthenticateScheme = "Bearer";
+                option.DefaultScheme = "Bearer";
+                option.DefaultChallengeScheme = "Bearer";
+
+            }).AddJwtBearer(cfg =>
+            {
+                cfg.RequireHttpsMetadata = false;
+                cfg.SaveToken = true;
+                cfg.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = authenticationSetting.JwtIssuer,
+                    ValidAudience = authenticationSetting.JwtIssuer,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSetting.JwtKey)),
+                };
+            });
+
+            builder.Configuration.GetSection("Authentication").Bind(authenticationSetting);
+
 
             builder.Services.AddControllers();
+
+            builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
             builder.Services.AddDbContext<DataDbContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -45,6 +74,7 @@ namespace EduCraftAPI
                 app.UseSwaggerUI();
             }
 
+            app.UseAuthentication();
             app.UseHttpsRedirection();
 
             app.UseAuthorization();

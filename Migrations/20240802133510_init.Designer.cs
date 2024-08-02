@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduCraftAPI.Migrations
 {
     [DbContext(typeof(DataDbContext))]
-    [Migration("20240802120227_init")]
+    [Migration("20240802133510_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -125,11 +125,16 @@ namespace EduCraftAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("RoleID")
+                        .HasColumnType("int");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserID");
+
+                    b.HasIndex("RoleID");
 
                     b.ToTable("User", (string)null);
                 });
@@ -154,6 +159,17 @@ namespace EduCraftAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Quiz");
+                });
+
+            modelBuilder.Entity("EduCraftAPI.Entities.User.User", b =>
+                {
+                    b.HasOne("EduCraftAPI.Entities.User.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Quiz.Question", b =>
