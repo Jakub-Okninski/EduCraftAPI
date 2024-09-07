@@ -19,9 +19,15 @@ namespace EduCraftAPI
                 options.AddPolicy("AllowMyOrigin",
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:5173")
+                        builder.WithOrigins("http://localhost:5175")
                                .AllowAnyHeader()
                                .AllowAnyMethod();
+                        builder.WithOrigins("http://localhost:5173")
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                        builder.WithOrigins("http://localhost:5174")
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
                     });
             });
             // Add services to the container.

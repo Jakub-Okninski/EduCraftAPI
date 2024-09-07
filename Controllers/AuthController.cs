@@ -56,7 +56,7 @@ namespace EduCraftAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
             }
 
             return Created();
@@ -69,14 +69,14 @@ namespace EduCraftAPI.Controllers
             var user = _context.Users.Include(u=>u.Role).FirstOrDefault(u => u.Email == loginDto.Username);
             if (user is null)
             {
-                return Unauthorized("Invalid username or password.");
+                return Unauthorized("Nieprawidłowa nazwa użytkownika lub hasło.");
 
             }
 
             var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginDto.Password);
             if (result == PasswordVerificationResult.Failed)
             {
-                return Unauthorized("Invalid username or password.");
+                return Unauthorized("Nieprawidłowa nazwa użytkownika lub hasło.");
 
             }
 
@@ -95,7 +95,7 @@ namespace EduCraftAPI.Controllers
 
             var token = new JwtSecurityToken(_authenticationSettings.JwtIssuer, _authenticationSettings.JwtIssuer, claims, expires: expires, signingCredentials: cred);
                 var tokenHandler = new JwtSecurityTokenHandler();
-            return Ok(new { token = tokenHandler.WriteToken(token) });
+            return Ok(new { token = tokenHandler.WriteToken(token) , name = user.FirstName, id= user.UserID.ToString(), role=user.Role.Name });
         }
 
     }
