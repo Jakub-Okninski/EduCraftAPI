@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Presentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Title>Moja Prezentacja</Title>
+  <Slides>
+    <Slide Id="1">
+      <Title>Slajd 1</Title>
+      <Elements>
+        <Element>
+          <Type>text</Type>
+          <Position>
+            <Top>250</Top>
+            <Left>625</Left>
+          </Position>
+          <Size>
+            <Width>350</Width>
+            <Height>158</Height>
+          </Size>
+          <Ops>
+            <Op>
+              <Insert>dsadasd</Insert>
+              <Attributes>
+                <Bold xsi:nil="true" />
+                <Italic xsi:nil="true" />
+                <Underline xsi:nil="true" />
+                <Strike xsi:nil="true" />
+                <Blockquote xsi:nil="true" />
+                <Header xsi:nil="true" />
+                <Indent xsi:nil="true" />
+                <Color>#e60000</Color>
+                <Background>#008a00</Background>
+              </Attributes>
+            </Op>
+            <Op>
+              <Insert>&amp;#10;</Insert>
+              <Attributes>
+                <Bold xsi:nil="true" />
+                <Italic xsi:nil="true" />
+                <Underline xsi:nil="true" />
+                <Strike xsi:nil="true" />
+                <Blockquote xsi:nil="true" />
+                <Header xsi:nil="true" />
+                <Indent xsi:nil="true" />
+                <Align>center</Align>
+                <List>bullet</List>
+              </Attributes>
+            </Op>
+            <Op>
+              <Insert>fds</Insert>
+              <Attributes>
+                <Bold xsi:nil="true" />
+                <Italic xsi:nil="true" />
+                <Underline xsi:nil="true" />
+                <Strike xsi:nil="true" />
+                <Blockquote xsi:nil="true" />
+                <Header xsi:nil="true" />
+                <Indent xsi:nil="true" />
+                <Color>#e60000</Color>
+                <Background>#008a00</Background>
+              </Attributes>
+            </Op>
+            <Op>
+              <Insert>&amp;#10;&amp;#10;</Insert>
+              <Attributes>
+                <Bold xsi:nil="true" />
+                <Italic xsi:nil="true" />
+                <Underline xsi:nil="true" />
+                <Strike xsi:nil="true" />
+                <Blockquote xsi:nil="true" />
+                <Header xsi:nil="true" />
+                <Indent>1</Indent>
+                <Align>center</Align>
+                <List>bullet</List>
+              </Attributes>
+            </Op>
+          </Ops>
+        </Element>
+        <Element>
+          <Type>image</Type>
+          <Position>
+            <Top>180</Top>
+            <Left>62.5</Left>
+          </Position>
+          <Size>
+            <Width>400</Width>
+            <Height>215.32709</Height>
+          </Size>
+          <Ops />
+          <Url>/src/assets/deadpool.jpg</Url>
+        </Element>
+      </Elements>
+    </Slide>
+    <Slide Id="2">
+      <Title>Slajd 2</Title>
+      <Elements>
+        <Element>
+          <Type>image</Type>
+          <Position>
+            <Top>310</Top>
+            <Left>62.5</Left>
+          </Position>
+          <Size>
+            <Width>265</Width>
+            <Height>132.5</Height>
+          </Size>
+          <Ops />
+          <Url>/src/assets/deadpool.jpg</Url>
+        </Element>
+      </Elements>
+    </Slide>
+  </Slides>
+</Presentation>
