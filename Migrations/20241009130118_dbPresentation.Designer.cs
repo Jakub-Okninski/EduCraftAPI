@@ -3,6 +3,7 @@ using EduCraftAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduCraftAPI.Migrations
 {
     [DbContext(typeof(DataDbContext))]
-    partial class DataDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241009130118_dbPresentation")]
+    partial class dbPresentation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,13 +24,13 @@ namespace EduCraftAPI.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("EduCraftAPI.Entities.Presentation.Presentations", b =>
+            modelBuilder.Entity("EduCraftAPI.Entities.Presentation.Presentation", b =>
                 {
-                    b.Property<int>("PresentationsID")
+                    b.Property<int>("PresentationID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PresentationsID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PresentationID"));
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -36,7 +39,7 @@ namespace EduCraftAPI.Migrations
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
-                    b.HasKey("PresentationsID");
+                    b.HasKey("PresentationID");
 
                     b.HasIndex("UserID");
 
@@ -161,7 +164,7 @@ namespace EduCraftAPI.Migrations
                     b.ToTable("User", (string)null);
                 });
 
-            modelBuilder.Entity("EduCraftAPI.Entities.Presentation.Presentations", b =>
+            modelBuilder.Entity("EduCraftAPI.Entities.Presentation.Presentation", b =>
                 {
                     b.HasOne("EduCraftAPI.Entities.User.User", "User")
                         .WithMany()

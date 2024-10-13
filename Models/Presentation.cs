@@ -1,11 +1,13 @@
-﻿namespace EduCraftAPI.Entities.Presentation
+﻿namespace EduCraftAPI.Models
 {
     using System;
     using System.Collections.Generic;
     using System.Xml.Serialization;
+
     [XmlRoot("Presentation")]
     public class Presentation
     {
+        public int? PresentationID { get; set; }
         public string Title { get; set; }
         [XmlArray("Slides")]
         [XmlArrayItem("Slide")]
@@ -14,18 +16,18 @@
     public class Slide
     {
         [XmlAttribute("Id")]
-        public string Id { get; set; }
-        public string? Title { get; set; } 
+        public int Id { get; set; }
+        public string? Title { get; set; }
         [XmlArray("Elements")]
         [XmlArrayItem("Element")]
-        public List<Element>? Elements { get; set; } 
+        public List<Element>? Elements { get; set; }
     }
 
     public class Element
     {
         public string? Type { get; set; }
-        public Position? Position { get; set; } = new Position(); 
-        public Size? Size { get; set; } = new Size(); 
+        public Position? Position { get; set; } = new Position();
+        public Size? Size { get; set; } = new Size();
         [XmlArray("Ops")]
         [XmlArrayItem("Op")]
         public List<Op>? Ops { get; set; }
@@ -36,10 +38,12 @@
             properties.Add($"Type: {Type}");
             properties.Add($"Position: {(Position != null ? Position.ToString() : "null")}");
             properties.Add($"Size: {(Size != null ? Size.ToString() : "null")}");
-            if (Ops != null && Ops.Count > 0){
+            if (Ops != null && Ops.Count > 0)
+            {
                 properties.Add("Ops: " + string.Join(", ", Ops));
             }
-            else{
+            else
+            {
                 properties.Add("Ops: null or empty");
             }
             properties.Add($"Url: {Url}");
@@ -69,7 +73,7 @@
                 _insertCode = value?.Replace("\n", "&#10;");
             }
         }
-       
+
         private string? _insert;
         private string? _insertCode;
         [XmlElement("Insert")]
@@ -94,21 +98,21 @@
     }
     public class Attributes
     {
-        public bool? Bold { get; set; } 
-        public bool? Italic { get; set; } 
-        public bool? Underline { get; set; } 
-        public bool? Strike { get; set; } 
+        public bool? Bold { get; set; }
+        public bool? Italic { get; set; }
+        public bool? Underline { get; set; }
+        public bool? Strike { get; set; }
         public bool? Blockquote { get; set; }
-        public int? Header { get; set; } 
-        public string? Script { get; set; } 
-        public int? Indent { get; set; } 
-        public string? Align { get; set; } 
-        public string? Direction { get; set; } 
-        public string? Size { get; set; } 
-        public string? Color { get; set; } 
-        public string? Background { get; set; } 
-        public string? Font { get; set; } 
-        public string? Link { get; set; } 
+        public int? Header { get; set; }
+        public string? Script { get; set; }
+        public int? Indent { get; set; }
+        public string? Align { get; set; }
+        public string? Direction { get; set; }
+        public string? Size { get; set; }
+        public string? Color { get; set; }
+        public string? Background { get; set; }
+        public string? Font { get; set; }
+        public string? Link { get; set; }
         public string? List { get; set; }
         public override string ToString()
         {

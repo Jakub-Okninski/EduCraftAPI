@@ -1,4 +1,5 @@
 ﻿
+using EduCraftAPI.Entities.Presentation;
 using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Entities.User;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ namespace EduCraftAPI.Data
         public DbSet<Answer> Answers{ get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Presentations> Presentation { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,6 +25,8 @@ namespace EduCraftAPI.Data
             modelBuilder.Entity<Answer>().ToTable("Answer");
             modelBuilder.Entity<Role>().ToTable("Role");
             modelBuilder.Entity<User>().ToTable("User");
+            modelBuilder.Entity<Presentations>().ToTable("Presentation");
+
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<User>()

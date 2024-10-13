@@ -1,146 +1,131 @@
-﻿using EduCraftAPI.Entities.Presentation;
+﻿using EduCraftAPI.Data;
+using EduCraftAPI.Entities.User;
+using EduCraftAPI.Entities.Presentation;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Xml.Serialization;
+using EduCraftAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduCraftAPI.Controllers
 {
     public class PresentationController : Controller
     {
-        public void SavePresentationToXml(Presentation presentation, string filePath)
+        private readonly DataDbContext _context;
+        public PresentationController(DataDbContext context)
         {
+            _context = context;
+        }
+        public void SavePresentationToXml(Presentation presentation, string filePath){
             var xmlSerializer = new XmlSerializer(typeof(Presentation));
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            using (var stream = new FileStream("Presentations\\" + filePath, FileMode.Create))
             using (var writer = new StreamWriter(stream))
             {
                 xmlSerializer.Serialize(writer, presentation);
             }
         }
-        private void ReplaceNewLineCharacters(Presentation presentation)
-        {
-            if (presentation.Slides != null)
-            {
-                foreach (var slide in presentation.Slides)
-                {
-                    if (slide.Title != null)
-                    {
-                        slide.Title = slide.Title.Replace("&#10;", "\n");
-                    }
-
-                    if (slide.Elements != null)
-                    {
-                        foreach (var element in slide.Elements)
-                        {
-                            if (element.Ops != null)
-                            {
-                                foreach (var op in element.Ops)
-                                {
-                                    if (op.Insert != null)
-                                    {
-                                       // op.InsertDecode = op.Insert.Replace("&#10;", "\n");
-                                    }
-                                }
-                            }
-
-                            if (element.Url != null)
-                            {
-                                element.Url = element.Url.Replace("&#10;", "\n");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-            public Presentation LoadPresentationFromXml(string filePath)
-        {
+      
+        public Presentation LoadPresentationFromXml(string filePath) {
             var xmlSerializer = new XmlSerializer(typeof(Presentation));
-
-            using (var stream = new FileStream(filePath, FileMode.Open))
+            using (var stream = new FileStream("Presentations\\"+filePath, FileMode.Open))
             using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8))
             {
-                var presentation = (Presentation)xmlSerializer.Deserialize(reader);
-
-                //ReplaceNewLineCharacters(presentation);
-
-                return presentation;
+                return (Presentation)xmlSerializer.Deserialize(reader);
             }
         }
 
 
         [HttpGet("/presentation")]
-        public IActionResult GetPresentation()
-        { return Ok(LoadPresentationFromXml("presentation.xml"));
+        public IActionResult GetPresentation([FromQuery] int presentationId)
+        {
 
-             
-
-            var presentationData = new Presentation
+            var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == presentationId);
+            if (presentation == null)
             {
-                Title = "Moja Prezentacja",
-                Slides = new List<Slide>
-            {
-                new Slide
-                {
-                    Id = "1",
-                    Title = "Slajd 1",
-                    Elements = new List<Element>
-                    {
-                        new Element
-                        {
-                            Type = "text",
-                            Ops = new List<Op>
-                            {
-                                new Op { Insert = "Hello, " },
-                                new Op { Insert = "world", Attributes = new Attributes { Bold = true } },
-                                new Op { Insert = "!\nThis is a list:\nItem 1" },
-                                new Op { Insert = "\n", Attributes = new Attributes { List = "bullet" } },
-                                new Op { Insert = "Item 2" },
-                                new Op { Insert = "\n", Attributes = new Attributes { List = "bullet" } }
-                            }
-                        },
-                        new Element
-                        {
-                            Type = "image",
-                            Url = "/src/assets/deadpool.jpg"
-                        }
-                    }
-                },
-                new Slide
-                {
-                    Id = "2",
-                    Title = "Slajd 2",
-                    Elements = new List<Element>
-                    {
-                        new Element
-                        {
-                            Type = "image",
-                            Url = "/src/assets/deadpool.jpg"
-                        }
-                    }
-                }
+                return NotFound("Prezentacja nie istnieje.");
             }
-            };
-            SavePresentationToXml(presentationData, "presentation.xml");
 
-            return Ok(presentationData);
+            return Ok(LoadPresentationFromXml(""+presentation.PresentationsID));
         }
 
-     
-        [HttpPost("/presentation/save")]
-        public IActionResult SavePresentation([FromBody] Presentation presentation)
+        [HttpGet("/presentations")] 
+        public IActionResult GetPresentationsByUser([FromQuery] int userId) 
         {
+
+
+            var user = _context.Users.FirstOrDefault(u => u.UserID == userId);
+            if (user == null)
+            {
+                return NotFound("Użytkownik nie istnieje."); 
+            }
+
+            var presentations = _context.Presentation
+                .Where(p => p.User.UserID == userId)
+                 .Select(p => new PresentationDTO
+                 {
+                     PresentationID = p.PresentationsID,
+                     Title = p.Title,
+    
+                 }).ToList();
+
+            if (!presentations.Any())
+            {
+                return NotFound("Brak prezentacji dla tego użytkownika.");
+            }
+
+            return Ok(presentations); 
+        }
+
+
+        [HttpPost("/presentation/create")]
+        public IActionResult CreatePresentation([FromBody] PresentationRequest request)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.UserID == request.UserId);
+            if (user == null)
+            {
+                return NotFound("Użytkownik nie istnieje.");
+            }
+            Presentations presentation = new Presentations();
+            presentation.Title = request.Title; 
+            presentation.User = user;
+            try
+            {
+                _context.Add(presentation);
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
+            }
+            int newPresentationId = presentation.PresentationsID;
+
+            try
+            {
+                Presentation presentationData = new Presentation();
+                presentationData.Title = request.Title;
+                presentationData.PresentationID = newPresentationId;
+                presentationData.Slides = [];
+                this.SavePresentationToXml(presentationData, "" + newPresentationId);
+            }
+            catch (Exception ex) {
+                _context.Remove(presentation);
+                _context.SaveChanges();
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
+            }
+
+            return StatusCode(201, presentation);
+        }
+
+        [HttpPost("/presentation/save")]
+        public IActionResult SavePresentation([FromBody] Presentation presentation){
             Debug.WriteLine("Zapisywanie...");
-            Debug.WriteLine(presentation.Slides[0].Elements[0].Ops[0].ToString);
-        
-
-
             if (presentation == null)
             {
                 return BadRequest("Prezentacja jest pusta.");
             }
             try
             {
-                SavePresentationToXml(presentation, "presentation.xml");
+                SavePresentationToXml(presentation, ""+ presentation.PresentationID);
                 Debug.WriteLine("Zapisano.");
                 return Ok($"Prezentacja została zapisana jako ");
             }

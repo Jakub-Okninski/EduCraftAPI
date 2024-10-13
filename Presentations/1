@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Presentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <PresentationID>1</PresentationID>
+  <Title>dsadas</Title>
+  <Slides>
+    <Slide Id="1">
+      <Title>Nowy Slajd</Title>
+      <Elements>
+        <Element>
+          <Type>text</Type>
+          <Position>
+            <Top>124</Top>
+            <Left>167</Left>
+          </Position>
+          <Size>
+            <Width>200</Width>
+            <Height>30</Height>
+          </Size>
+          <Ops>
+            <Op>
+              <Insert>dsadsadsa&amp;#10;</Insert>
+            </Op>
+          </Ops>
+        </Element>
+      </Elements>
+    </Slide>
+    <Slide Id="2">
+      <Title>Nowy Slajd</Title>
+      <Elements>
+        <Element>
+          <Type>text</Type>
+          <Position>
+            <Top>70</Top>
+            <Left>62.5</Left>
+          </Position>
+          <Size>
+            <Width>200</Width>
+            <Height>30</Height>
+          </Size>
+          <Ops>
+            <Op>
+              <Insert>Nowa&amp;#10;</Insert>
+            </Op>
+          </Ops>
+        </Element>
+      </Elements>
+    </Slide>
+    <Slide Id="3">
+      <Title>Nowy Slajd</Title>
+      <Elements>
+        <Element>
+          <Type>text</Type>
+          <Position>
+            <Top>57</Top>
+            <Left>87</Left>
+          </Position>
+          <Size>
+            <Width>200</Width>
+            <Height>30</Height>
+          </Size>
+          <Ops>
+            <Op>
+              <Insert>Jakub&amp;#10;</Insert>
+            </Op>
+          </Ops>
+        </Element>
+      </Elements>
+    </Slide>
+  </Slides>
+</Presentation>
