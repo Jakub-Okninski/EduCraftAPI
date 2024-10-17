@@ -1,4 +1,5 @@
 ﻿
+using EduCraftAPI.Entities.Flashcards;
 using EduCraftAPI.Entities.Presentation;
 using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Entities.User;
@@ -17,6 +18,8 @@ namespace EduCraftAPI.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Presentations> Presentation { get; set; }
+        public DbSet<Flashcards> Flashcards { get; set; }
+        public DbSet<Flashcard> Flashcard { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,6 +29,8 @@ namespace EduCraftAPI.Data
             modelBuilder.Entity<Role>().ToTable("Role");
             modelBuilder.Entity<User>().ToTable("User");
             modelBuilder.Entity<Presentations>().ToTable("Presentation");
+            modelBuilder.Entity<Flashcards>().ToTable("Flashcards");
+            modelBuilder.Entity<Flashcard>().ToTable("Flashcard");
 
             base.OnModelCreating(modelBuilder);
 

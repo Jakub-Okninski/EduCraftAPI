@@ -25,6 +25,8 @@
 
     public class Element
     {
+        [XmlAttribute("Id")]
+        public int Id { get; set; }
         public string? Type { get; set; }
         public Position? Position { get; set; } = new Position();
         public Size? Size { get; set; } = new Size();

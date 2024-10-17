@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="Presentations\" />
     <Folder Include="Services\" />
   </ItemGroup>
 

@@ -1,0 +1,141 @@
+﻿using Azure.Core;
+using EduCraftAPI.Data;
+using EduCraftAPI.Entities.Flashcards;
+using EduCraftAPI.Entities.Presentation;
+using EduCraftAPI.Entities.User;
+using EduCraftAPI.Migrations;
+using EduCraftAPI.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace EduCraftAPI.Controllers
+{
+    public class FlashcardsController : Controller
+    {
+
+        private readonly DataDbContext _context;
+        public FlashcardsController(DataDbContext context)
+        {
+            _context = context;
+        }
+        [HttpGet("/flashcards")]
+        public IActionResult GetFlashcards([FromQuery] int UserID)
+        {
+            var flashcards = _context.Flashcards
+                .Where(p => p.User.UserID == UserID)
+                .ToList(); 
+
+            if (flashcards == null)
+            {
+                return NotFound("Fiszki nie istnieją.");
+            }
+            return Ok(flashcards);
+        }
+        [HttpGet("/flashcard")]
+        public IActionResult GetFlashcards([FromQuery] int UserID, int FlashcardID)
+        {
+            var flashcards = _context.Flashcards
+                 .Include(p => p.Flashcard)
+                .FirstOrDefault(p => p.FlashcardsID == FlashcardID && p.User.UserID == UserID);
+            
+
+
+
+
+            if (flashcards == null)
+            {
+                return NotFound("Fiszki nie istnieją.");
+            }
+            return Ok(flashcards);
+        }
+
+
+
+        [HttpPost("/flashcard/create")]
+
+        public IActionResult CreateFlashcard([FromBody] CreateFlashcardDto createFlashcard)
+        {
+            if (createFlashcard == null)
+            {
+                return BadRequest("Nieprawidłowe dane.");
+            }
+
+            var flashcards = _context.Flashcards.FirstOrDefault(u => u.FlashcardsID == createFlashcard.FlashcardsId);
+            if (flashcards == null)
+            {
+                return NotFound("FlashCards nie istnieje.");
+            }
+
+            var flashcar = new Flashcard()
+            {
+                Title = createFlashcard.Title,
+                Description = createFlashcard.Description
+            };
+            _context.Flashcard.Add(flashcar);
+            if (flashcards.Flashcard == null)
+            {
+                flashcards.Flashcard = new List<Flashcard>();
+            }
+            flashcards.Flashcard.Add(flashcar);
+            _context.SaveChanges();
+            return Ok(flashcar);
+        }
+
+        [HttpDelete("/flashcard/remove")]
+        public IActionResult RemoveFlashcards([FromQuery] int flashcardsID)
+        {
+            var flashcard = _context.Flashcard.FirstOrDefault(f => f.FlashcardID == flashcardsID);
+
+            if (flashcard == null)
+            {
+                return NotFound("Flashcards nie istnieje.");
+            }
+
+            _context.Flashcard.Remove(flashcard);
+
+            _context.SaveChanges();
+
+            return Ok("Flashcard zostało pomyślnie usunięte.");
+        }
+
+        [HttpPost("/flashcards/create")]
+        public IActionResult CreateFlashcards([FromBody] CreateFlashcardsDto createFlashcardsDto)
+        {
+            if (createFlashcardsDto == null)
+            {
+                return BadRequest("Nieprawidłowe dane.");
+            }
+
+            var user = _context.Users.FirstOrDefault(u => u.UserID == createFlashcardsDto.UserId);
+            if (user == null)
+            {
+                return NotFound("Użytkownik nie istnieje.");
+            }
+
+            var flashcards = new Flashcards
+            {
+                User = user,
+                Title = createFlashcardsDto.Title,
+                Flashcard = new List<Flashcard>()
+            };
+
+            if (createFlashcardsDto?.Flashcards != null)
+            {
+                foreach (var cardDto in createFlashcardsDto.Flashcards)
+                {
+                    var flashcard = new Flashcard
+                    {
+                        Title = cardDto.Title,
+                        Description = cardDto.Description
+                    };
+                    flashcards.Flashcard.Add(flashcard);
+                }
+            }
+
+            _context.Flashcards.Add(flashcards);
+            _context.SaveChanges();
+
+            return Ok(flashcards);
+        }
+    }
+}

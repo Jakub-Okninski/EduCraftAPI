@@ -17,8 +17,18 @@ namespace EduCraftAPI.Controllers
             _context = context;
         }
         public void SavePresentationToXml(Presentation presentation, string filePath){
+
+
+            string directoryPath = Path.Combine("Presentations", filePath);
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+
+            string fullFilePath = Path.Combine(directoryPath, filePath);
+
             var xmlSerializer = new XmlSerializer(typeof(Presentation));
-            using (var stream = new FileStream("Presentations\\" + filePath, FileMode.Create))
+            using (var stream = new FileStream(fullFilePath, FileMode.Create))
             using (var writer = new StreamWriter(stream))
             {
                 xmlSerializer.Serialize(writer, presentation);
@@ -26,8 +36,10 @@ namespace EduCraftAPI.Controllers
         }
       
         public Presentation LoadPresentationFromXml(string filePath) {
+            string fullFilePath = Path.Combine("Presentations", filePath, filePath);
+
             var xmlSerializer = new XmlSerializer(typeof(Presentation));
-            using (var stream = new FileStream("Presentations\\"+filePath, FileMode.Open))
+            using (var stream = new FileStream(fullFilePath, FileMode.Open))
             using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8))
             {
                 return (Presentation)xmlSerializer.Deserialize(reader);
