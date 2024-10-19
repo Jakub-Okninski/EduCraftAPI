@@ -31,17 +31,46 @@ namespace EduCraftAPI.Controllers
             }
             return Ok(flashcards);
         }
+
+
+
+        [HttpPut("/flashcard/edit")]
+        public async Task<IActionResult> UpdateFlashcard([FromBody] Flashcard updatedFlashcard)
+        {
+            var flashcard = _context.Flashcard.FirstOrDefault(u => u.FlashcardID == updatedFlashcard.FlashcardID);
+
+            if (flashcard == null)
+            {
+                return NotFound("Flashcard not found.");
+            }
+
+           
+            flashcard.Title = updatedFlashcard.Title;
+            flashcard.Description = updatedFlashcard.Description;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Błąd podczas zapisywania prezentacji: {ex.Message}");
+
+            }
+
+            return Ok();
+        }
+
+
+
+
         [HttpGet("/flashcard")]
         public IActionResult GetFlashcards([FromQuery] int UserID, int FlashcardID)
         {
             var flashcards = _context.Flashcards
                  .Include(p => p.Flashcard)
                 .FirstOrDefault(p => p.FlashcardsID == FlashcardID && p.User.UserID == UserID);
-            
-
-
-
-
+           
             if (flashcards == null)
             {
                 return NotFound("Fiszki nie istnieją.");

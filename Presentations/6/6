@@ -51,7 +51,7 @@
         <Element Id="13">
           <Type>text</Type>
           <Position>
-            <Top>250</Top>
+            <Top>100</Top>
             <Left>0</Left>
           </Position>
           <Size>
@@ -60,7 +60,28 @@
           </Size>
           <Ops>
             <Op>
-              <Insert>Nowy Elemasdaaaaaaaaaaaaaaaaaaaaaaaaaaaa&amp;#10;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasdaaaaa&amp;#10;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&amp;#10;aasdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaentjkhlkjlkjlljkfgdgfdggfdgdddddddddddddddddddddg&amp;#10;</Insert>
+              <Insert>Twoja stasdasdsadasd</Insert>
+              <Attributes>
+                <Bold>true</Bold>
+                <Italic xsi:nil="true" />
+                <Underline xsi:nil="true" />
+                <Strike xsi:nil="true" />
+                <Blockquote xsi:nil="true" />
+                <Header xsi:nil="true" />
+                <Indent xsi:nil="true" />
+              </Attributes>
+            </Op>
+            <Op>
+              <Insert>&amp;#10;</Insert>
+              <Attributes>
+                <Bold xsi:nil="true" />
+                <Italic xsi:nil="true" />
+                <Underline xsi:nil="true" />
+                <Strike xsi:nil="true" />
+                <Blockquote xsi:nil="true" />
+                <Header>1</Header>
+                <Indent xsi:nil="true" />
+              </Attributes>
             </Op>
           </Ops>
         </Element>
