@@ -5,34 +5,33 @@ using EduCraftAPI.Entities.Presentation;
 using EduCraftAPI.Entities.User;
 using EduCraftAPI.Migrations;
 using EduCraftAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduCraftAPI.Controllers
 {
+    [Authorize]
     public class FlashcardsController : Controller
     {
-
         private readonly DataDbContext _context;
         public FlashcardsController(DataDbContext context)
         {
             _context = context;
         }
+        [Authorize(Roles= "User,Admin")]
         [HttpGet("/flashcards")]
         public IActionResult GetFlashcards([FromQuery] int UserID)
         {
             var flashcards = _context.Flashcards
                 .Where(p => p.User.UserID == UserID)
                 .ToList(); 
-
             if (flashcards == null)
             {
-                return NotFound("Fiszki nie istnieją.");
+                return NoContent();
             }
             return Ok(flashcards);
         }
-
-
 
         [HttpPut("/flashcard/edit")]
         public async Task<IActionResult> UpdateFlashcard([FromBody] Flashcard updatedFlashcard)
@@ -41,10 +40,8 @@ namespace EduCraftAPI.Controllers
 
             if (flashcard == null)
             {
-                return NotFound("Flashcard not found.");
+                return NoContent();
             }
-
-           
             flashcard.Title = updatedFlashcard.Title;
             flashcard.Description = updatedFlashcard.Description;
 
@@ -60,12 +57,25 @@ namespace EduCraftAPI.Controllers
 
             return Ok();
         }
+        [AllowAnonymous]
+        [HttpGet("/play/flashcards")]
+        public IActionResult GetFlashcardsOnID([FromQuery] int FlashcardID)
+        {
+            var flashcards = _context.Flashcards
+                 .Include(p => p.Flashcard)
+                .FirstOrDefault(p => p.FlashcardsID == FlashcardID);
 
+            if (flashcards == null)
+            {
+                return NoContent();
+            }
+            return Ok(flashcards);
+        }
 
 
 
         [HttpGet("/flashcard")]
-        public IActionResult GetFlashcards([FromQuery] int UserID, int FlashcardID)
+        public IActionResult GetFlashcard([FromQuery] int UserID, int FlashcardID)
         {
             var flashcards = _context.Flashcards
                  .Include(p => p.Flashcard)
@@ -73,15 +83,12 @@ namespace EduCraftAPI.Controllers
            
             if (flashcards == null)
             {
-                return NotFound("Fiszki nie istnieją.");
+                return NoContent();
             }
             return Ok(flashcards);
         }
-
-
-
         [HttpPost("/flashcard/create")]
-
+       
         public IActionResult CreateFlashcard([FromBody] CreateFlashcardDto createFlashcard)
         {
             if (createFlashcard == null)
@@ -92,7 +99,7 @@ namespace EduCraftAPI.Controllers
             var flashcards = _context.Flashcards.FirstOrDefault(u => u.FlashcardsID == createFlashcard.FlashcardsId);
             if (flashcards == null)
             {
-                return NotFound("FlashCards nie istnieje.");
+                return NoContent();
             }
 
             var flashcar = new Flashcard()
@@ -117,7 +124,7 @@ namespace EduCraftAPI.Controllers
 
             if (flashcard == null)
             {
-                return NotFound("Flashcards nie istnieje.");
+                return NoContent();
             }
 
             _context.Flashcard.Remove(flashcard);
@@ -138,7 +145,7 @@ namespace EduCraftAPI.Controllers
             var user = _context.Users.FirstOrDefault(u => u.UserID == createFlashcardsDto.UserId);
             if (user == null)
             {
-                return NotFound("Użytkownik nie istnieje.");
+                return NoContent();
             }
 
             var flashcards = new Flashcards
@@ -160,10 +167,8 @@ namespace EduCraftAPI.Controllers
                     flashcards.Flashcard.Add(flashcard);
                 }
             }
-
             _context.Flashcards.Add(flashcards);
             _context.SaveChanges();
-
             return Ok(flashcards);
         }
     }

@@ -23,7 +23,6 @@ namespace EduCraftAPI.Controllers
             _authenticationSettings = authenticationSettings;
         }
 
-
         [HttpPost("register")]
         public ActionResult Register([FromBody] RegisterUserDto registerUserDto)
         {
@@ -62,8 +61,6 @@ namespace EduCraftAPI.Controllers
             return Created();
         }
 
-
-
         [HttpPost("login")]
         public ActionResult Login([FromBody] LoginDto loginDto)
         {
@@ -98,6 +95,5 @@ namespace EduCraftAPI.Controllers
                 var tokenHandler = new JwtSecurityTokenHandler();
             return Ok(new { token = tokenHandler.WriteToken(token) , name = user.FirstName, id= user.UserID.ToString(), role=user.Role.Name });
         }
-
     }
 }

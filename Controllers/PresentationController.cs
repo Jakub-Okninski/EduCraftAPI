@@ -6,9 +6,11 @@ using System.Diagnostics;
 using System.Xml.Serialization;
 using EduCraftAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EduCraftAPI.Controllers
 {
+    [Authorize]
     public class PresentationController : Controller
     {
         private readonly DataDbContext _context;
@@ -17,16 +19,12 @@ namespace EduCraftAPI.Controllers
             _context = context;
         }
         public void SavePresentationToXml(Presentation presentation, string filePath){
-
-
             string directoryPath = Path.Combine("Presentations", filePath);
             if (!Directory.Exists(directoryPath))
             {
                 Directory.CreateDirectory(directoryPath);
             }
-
             string fullFilePath = Path.Combine(directoryPath, filePath);
-
             var xmlSerializer = new XmlSerializer(typeof(Presentation));
             using (var stream = new FileStream(fullFilePath, FileMode.Create))
             using (var writer = new StreamWriter(stream))
@@ -34,7 +32,6 @@ namespace EduCraftAPI.Controllers
                 xmlSerializer.Serialize(writer, presentation);
             }
         }
-      
         public Presentation LoadPresentationFromXml(string filePath) {
             string fullFilePath = Path.Combine("Presentations", filePath, filePath);
 
@@ -48,13 +45,14 @@ namespace EduCraftAPI.Controllers
 
 
         [HttpGet("/presentation")]
+        [AllowAnonymous]
         public IActionResult GetPresentation([FromQuery] int presentationId)
         {
 
             var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == presentationId);
             if (presentation == null)
             {
-                return NotFound("Prezentacja nie istnieje.");
+                return NoContent();
             }
 
             return Ok(LoadPresentationFromXml(""+presentation.PresentationsID));
@@ -63,12 +61,10 @@ namespace EduCraftAPI.Controllers
         [HttpGet("/presentations")] 
         public IActionResult GetPresentationsByUser([FromQuery] int userId) 
         {
-
-
             var user = _context.Users.FirstOrDefault(u => u.UserID == userId);
             if (user == null)
             {
-                return NotFound("Użytkownik nie istnieje."); 
+                return NoContent();
             }
 
             var presentations = _context.Presentation
@@ -82,9 +78,8 @@ namespace EduCraftAPI.Controllers
 
             if (!presentations.Any())
             {
-                return NotFound("Brak prezentacji dla tego użytkownika.");
+                return NoContent();
             }
-
             return Ok(presentations); 
         }
 
@@ -95,11 +90,19 @@ namespace EduCraftAPI.Controllers
             var user = _context.Users.FirstOrDefault(u => u.UserID == request.UserId);
             if (user == null)
             {
-                return NotFound("Użytkownik nie istnieje.");
+                return NoContent();
+            }
+            var category = _context.Category.FirstOrDefault(u => u.Name == "IT");
+            if (category == null)
+            {
+                return NoContent();
             }
             Presentations presentation = new Presentations();
             presentation.Title = request.Title; 
             presentation.User = user;
+            presentation.CreationDate = DateTime.Now;
+            presentation.IsPublic = false;
+            presentation.Category = category;
             try
             {
                 _context.Add(presentation);
@@ -133,7 +136,7 @@ namespace EduCraftAPI.Controllers
             Debug.WriteLine("Zapisywanie...");
             if (presentation == null)
             {
-                return BadRequest("Prezentacja jest pusta.");
+                return NoContent();
             }
             try
             {

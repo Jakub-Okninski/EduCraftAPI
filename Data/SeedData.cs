@@ -22,10 +22,27 @@ namespace EduCraftAPI.Entities{
                         Name = "Quiz 2"
                     }
                 );
+
                     context.SaveChanges();
                 }
 
-               
+                if (!context.Category.Any())
+                {
+                context.Category.AddRange(
+                     new Category.Category
+                     {
+                         Name = "IT"
+                     },
+                     new Category.Category
+                     {
+                         Name = "Math"
+                     }
+
+                );
+                    context.SaveChanges();
+                }
+
+
 
                 if (!context.Roles.Any())
                 {

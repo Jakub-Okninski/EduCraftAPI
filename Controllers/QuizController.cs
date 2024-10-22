@@ -10,7 +10,7 @@ namespace EduCraftAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-
+    [Authorize]
     public class QuizController : Controller
     {
         private readonly DataDbContext _context;
@@ -24,7 +24,7 @@ namespace EduCraftAPI.Controllers
             return Ok(quizzes);
         }
         [HttpGet("{id}")]
-        [Authorize]
+        [AllowAnonymous]
         public async Task<ActionResult<Quiz>> Quiz(int id)
         {
             var quiz = await _context.Quizzes
@@ -32,7 +32,7 @@ namespace EduCraftAPI.Controllers
                               .ThenInclude(q => q.Answers) 
                           .FirstOrDefaultAsync(q => q.QuizID == id);
             if (quiz is null)
-                return NotFound("Quiz not found");
+                return NoContent();
             return Ok(quiz);
         }
 

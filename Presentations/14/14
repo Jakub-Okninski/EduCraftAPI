@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Presentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <PresentationID>7</PresentationID>
-  <Title>cxcxz</Title>
+  <PresentationID>14</PresentationID>
+  <Title>dupa</Title>
   <Slides>
     <Slide Id="1">
       <Title>Nowy Slajd</Title>
@@ -9,8 +9,8 @@
         <Element Id="1">
           <Type>text</Type>
           <Position>
-            <Top>165</Top>
-            <Left>370</Left>
+            <Top>5</Top>
+            <Left>4</Left>
           </Position>
           <Size>
             <Width>200</Width>
@@ -18,22 +18,37 @@
           </Size>
           <Ops>
             <Op>
-              <Insert>dsadsadads&amp;#10;</Insert>
+              <Insert>dfggfdgfd&amp;#10;</Insert>
             </Op>
           </Ops>
         </Element>
         <Element Id="2">
           <Type>image</Type>
           <Position>
-            <Top>190</Top>
-            <Left>375</Left>
+            <Top>90</Top>
+            <Left>750</Left>
           </Position>
           <Size>
             <Width>200</Width>
             <Height>112.37458</Height>
           </Size>
-          <Ops />
           <Url>data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASsAAACoCAMAAACPKThEAAABI1BMVEX///+fc9ksAG85AJAyAIAwAHoxAH0zAIMvAHeaa9ctAHK6sdMpAIouAHU3AIyecdmXZtY1AIji1vOcbtjbzu4AAGGleN4ZAH+WZNby7vklAGwYAGengNz7+v339PujmMS1leGujN6qhtyOY8rr5Pbs6fLBqOalfNvl2vTHsOi9ouTRwOuTX9TErebn3/Tj3+1nSqTMuOqdj8AGAG4aAHrLxdoAAGizkuDYye91S7ZDHJFRKJxXOpxoQKx/Vb5MIpl8Z66FcrSyp8xqUaVTNJlIJ5KFd7GVg71dNaTV0ONtVqV3T7Q7EYaBarM4FH4AAHXBudVILoN4aKKYjLc7HH1JEpZcRpViUY+zqcuGeKpdR5FONIl8bqJxX6FDLnqjmrw+I3me7T6MAAAL6ElEQVR4nO2dCVvaWBSGWcISzFYjYUmDigtWbREC1G6Oo3bBzlQqbdVO1f7/XzH3JgGy3XATQuEGvukzzMxDCHnnnC/nnnOjsdhSSy211FJLLTVnUpRZfwMytLdbpYFqu6uz/ibzrr2aIPJxIF4Uamuz/jbzrNKGoIHSxQub27P+RvMq5Zkgxi3ihf2lc7npgKfjDoliY9bfa/704qkLKRhadG1p8hZVXpqNyp6IL0uz/n7zI6dR2WntLm1L13HcPf3MtkUfzPpbzoO2EUZlt62ne7P+prNWZR9tVPZE3Fhs22p4G5UtEYVns/6+s9PaeKOyihaPZ/2dZ6PtquCPlEar+mLW3/vPS9ktYhqVVcC2KrP+7n9YDdGHUVm1YLa1WqMDBZUhWlqYbk1pE7dOQEpYDNtSdieKKUML0a05CG5UVolCxLs1e1gLGkzRUoS7NdYWcQgSNiO67FEaxZDSbyS+GEnbOhZDTL+RItitCbSgwRJP1yLVransB1vQYNKKUremQYduVFaBZU80bGtNmopRWRWJbs30jMpOq0q4bU3XqKwi3LYCGhUPFeA4kSZ22eO788KLNF0s0rVNqNrhoUD7ZU3zRHZr/HZeRLpY3T3eNqfR9urBfq3ojxeB3Rpl1xcpsRh/hrDm0uq+4AcXL+yT1WQ+9nN1ohB/5u3KexuHIj56spY9ftJPLO5jZI3SoPHND9wRp36JYamKH1QijX2jP/Cx+BarU73A8LSLfU180dcA6zl+U4fen9rlham9Iu4FCVWfxWMFv1koEFE81LA3cwRYwq1iupb06nX4Vxa6VjHXf3Q10K1dqWJkuHTCccxK2FcWvjaw/sfzxcDLkefjclzi3zDJZPJtmFc1HeGFFT3BCGbt0Ot/h8S/e5KEYua+JN3GYcXTE3UEvM4B0y+ps2qHdU3T0iqGnYi1CU9SQsGStl4zSUPzb1gYrCZGBWC5nkUSPw1JRYMVPzkqCMvhWVL8HZdMRouVEMoYYdV+N5ROnlhQRYGVEFKj99jiWdLWX0wyGTFWxdD2a5iWnRL/yU4qAqzo3fBOVR1YlvTKSYp8VrwU4qkqehZKJ985F1TEsxJCfdAUWpa09cYtqMhnRYe8gxisPd8hSBHPKo71EUoJCG8x94pzTb8IsBLG3wO3Gxu8oInefD5u6F5/iwwq0lnx45rglUZcoIcTZ14U6F2PYkw5LXiQIpyV4D2vUfYd7XReLCJHF+uMV1ARzop/6nngsfvgQSw+d3t3jxtDimxWtNe0QEFvPaJrjtCqH40lRTQrnvY4quT1hABvq8qUv72NinxWomsu6UL27gxYh2anOxtnVOSz8ijZx6CyHNx7j0eKBFZrSL9CHqJgTBSNptfOOS4pkll5pOAGxuRdu4kqTc2ouKOjo3NYr781XqPGCl1crWFNyehGbMUwKgYcVALUCjvgH9BxRi4r9F0QhxTsvFwMsLwHB9XBvxRAXlbQt0RiWaEL0QbOrhpL5+UTOGqF0eOrHsG4EpHdGBxSls4L8wEcdQv+wwV4bUeQFXJbIsZWkdEoWWfwERz2kUky5zE9viLHCmXtL8fVC+ZRcjL5/fz8CDJoHp0fNcHrGXhF3AqJZVVEDQUPx5ASrROaI+cnKAh7J5cV4u17ns4u8fYWsQurUtRYoebyDa861DFKdmWFKhtIZYUsGTzsymWUDGqr9XVoU7EmeC0Zr8TOcXyyeopi5TpKhgQYWFa9KDBMAbICr6g7YeRYITdSvUIu9ODexq5Rim57dLIWhBVqlKxpWFbFPMv2xWAlbb1vIVFxDPSrdYZjoM33FomVc08xWNCkKCr9xPX635xeXp6Bw9YvTy8hszZ4RWGNHCuHt0uf05QmV1qnzk9AlVfEskK2ZDatrKStfwxUABbljJhL5ycg7Z1YVqi6/Zm5FpXEixY1RAVELWRcoXY+mkYZulGZUaXTqYz1+i+azY8V2EwGr3Vw+Hqz+SFq9RXyOQlluHaWTqi0HRWkZbUtUIKCo3YGpSiDLkUJZoXqXxmLHGnrdYrKOEilU6mU3eRjRimqoFsMZLMSUc8+au8HC5qRUQ1RpeAfACubNiOA9g7LKi7mXbaTywrZaIjBh74/A1IZnZItqHRlR7bF/RvTy3bYQfYq2wlmhXwC4IA++WeUfZCWC6ssMHlj4AVL0CaT5E5jnh1kklnRyE16b1sZ9/yDCZjVUQF9+aAlHLMeqyiAFfNRUcBSJ5Ks0HPn7hVlZCCVNoVVahRVABbb6cXq2oSQKRQK5tcIsoqjd7Y3WwYoHZYVlBFV6jV8J8YONV0cXGSTy6qI3ifzI23JPysrAIrNsl/1dyrNArpZY4FFwgPPSFZevxRIWwSO7oEpzapGQZVlU8Mt3KVLnNDiOKLjyiMJY8qXlimo0jZSZlRAXYwdWBzZceX9fMmPFiL/gHJfbA8GjNvZx2kqEMwKWbprWlcRqNjOtePNykevgl1HRXRcxQXP50a6F6qtVIC1Qrac67m9u47c4MdxUWAljnl2sEep5pIKxpSq9lH1fvu1K60hKqJzEJQN4x5I6t2ratYo1VlW7Xx79DrCxbYGnJ6Av8hmNS6wgJR2/8e3lqqqqd+/zsb9DLHK3+ioIpyVxH+vY32GomD+It4dddDb4mykQGCRzEp6RVE/wj3ZTTmRco0qAItgVhLsvGRaZ2Geq5dPAFEOUCABOXJZSVvv05lMhsq0dsI7VaWT0PXEFlMwqkhlJcXftUBQQVH/hXeqH2WDVYLlkg5UZLKSPlMGKRhYd2GdqS8nRkoNco/ouIKj5MxAFEVdhXQJ7XzCImrg6UZYZYhjJYmfRqT05ucVXuEwRnU5YVMuA0sFrQwlMa5MRjVEFQ4sJVG2swK2ZVACf8+Qxko6oUykRhOI1sSwKt9cUGm2BUlliIsraet12kJqNFaeFJaCQKXZlhZUGeBXrg2KedLg5w5qo2S3oNLGD+pE17GDRgVtS3P2TKYw9z/bMGb8cLh3lphyTADVx+Bn6MoeqICy+o2wNfc/M1N7ytRmVBlqlICDTrF6H/QEt3lPUlBpGFghrz2noVXBWNC45J95Ap9NBTOt6/GoQCKmCbB2oJrVqCyoqNEAIp3q9P1/eJd11FUo2wr/ysJX/Wp8UOkDQDXl036Vu7y3VY2Un39nh1pvjTzdZVuHaVaaVX/6ScSzMmZQJRJyaMvOKeuuZQoq52Y981SL7dx3MT+1l8MmlZCdc7J51fqVLQHTlrGyZQDIdv7DKLZKj7kxlYJJ5XwAJ5yZuhctympVaatVaRurBiN4tXzt6S5K717Gj6mE/A03VOdEK1TLGVUpy149g1SWZdlyR/214m5d9dv7PH5IAVLlCcrcGUnpm/b1Uw5Ug3HpgBZblvO5m/5Kd9uY4SjKdve2f1P2BQqk3938l+su2rm/cibg0NR1VoBTNgf/sDmgclmW8/kc+/DwwOY6eVn2xQmS8nVfnSu1v7bs97+sKQNTLKQFSEFUGiwo7aL9MTIkfyOjqELotuWyWWiUflkt/QxSOq1ELggmLajIMyqrlA9XKTsqmHrwz8CqcqagMgIrAKlfIY7TZqX6veooqoaentViaogqaEwl8g/EGpVV7S8tBCo9AScmJSfmvgeKr8dW1lkqDLKPHeVfIFLkG5VVyp2aNQdVdph/uQnDqpy/iYBRWVX/CWgNo8q4+7GmoAp2A5SjYlRW9bKqVlENgspqVYHCSi7fzvqqpqVHlQ3T1Mv5PpELGjxVfnXYrB1VIlgBGkWjsqr7s8PawypQUMm/Ceu8BFEvV7bkX6CgkuXIGpVV/U4uZ05B36TK+btQftEVCdq57ozyzzcqYFSRrBNQav+WgzoV4Z2XILqVy0FgyXK0FjR4Uvo+u54JzahC+jVzpKl+gz1G1kVwi3hytR/8zLLcH49bHN3iTv6i1nkJogrWfo5otIgnF4ZtyV8XYEGDp7b3tg65vOBGZdUjun4gayfHn1Dl2j0RF21Bg6fuT5edoPLvhVvQ4Kln37cX4RbxxFL65kSMdot4cgHbksua5Pz10qjGqNK7u3l4+Hl3u4yppZZaaqmlpq3/AWMtYJoFKENZAAAAAElFTkSuQmCC</Url>
+        </Element>
+        <Element Id="3">
+          <Type>text</Type>
+          <Position>
+            <Top>237</Top>
+            <Left>460</Left>
+          </Position>
+          <Size>
+            <Width>200</Width>
+            <Height>30</Height>
+          </Size>
+          <Ops>
+            <Op>
+              <Insert>Nowy Element&amp;#10;</Insert>
+            </Op>
+          </Ops>
         </Element>
       </Elements>
     </Slide>
