@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using EduCraftAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using EduCraftAPI.Services;
 
 namespace EduCraftAPI.Controllers
 {
@@ -14,9 +15,12 @@ namespace EduCraftAPI.Controllers
     public class PresentationController : Controller
     {
         private readonly DataDbContext _context;
-        public PresentationController(DataDbContext context)
+        private readonly IPresentationService _presentationServices;
+
+        public PresentationController(DataDbContext context, IPresentationService presentationServices)
         {
             _context = context;
+            _presentationServices = presentationServices;
         }
         public void SavePresentationToXml(Presentation presentation, string filePath){
             string directoryPath = Path.Combine("Presentations", filePath);
@@ -48,7 +52,6 @@ namespace EduCraftAPI.Controllers
         [AllowAnonymous]
         public IActionResult GetPresentation([FromQuery] int presentationId)
         {
-
             var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == presentationId);
             if (presentation == null)
             {
@@ -58,9 +61,35 @@ namespace EduCraftAPI.Controllers
             return Ok(LoadPresentationFromXml(""+presentation.PresentationsID));
         }
 
+
+        [AllowAnonymous]
+        [HttpGet("/generate/presentation")]
+        public IActionResult generatePresentation([FromQuery] int presentationId)
+        {
+
+            var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == presentationId);
+            if (presentation == null)
+            {      
+                return NoContent();
+            }
+            Debug.WriteLine("                    ");
+            Debug.WriteLine("dupa2.");
+            Debug.WriteLine("                    ");
+
+
+            return _presentationServices.GeneratePPTX(LoadPresentationFromXml(presentation.PresentationsID.ToString()));
+            //var fileName = "presentation.pptx";
+            //var contentType = "application/vnd.openxmlformats-officedocument.presentationml.presentation"; 
+
+            //return File(fileContent, contentType, fileName);
+        }
+
         [HttpGet("/presentations")] 
         public IActionResult GetPresentationsByUser([FromQuery] int userId) 
         {
+
+       
+
             var user = _context.Users.FirstOrDefault(u => u.UserID == userId);
             if (user == null)
             {

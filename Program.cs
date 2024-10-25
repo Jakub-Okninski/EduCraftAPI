@@ -2,6 +2,7 @@
 using EduCraftAPI.Data;
 using EduCraftAPI.Entities;
 using EduCraftAPI.Entities.User;
+using EduCraftAPI.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -53,6 +54,7 @@ namespace EduCraftAPI
 
             builder.Configuration.GetSection("Authentication").Bind(authenticationSetting);
 
+            builder.Services.AddScoped<IPresentationService, PresentationService>();
 
             builder.Services.AddControllers();
 
