@@ -15,11 +15,13 @@ namespace EduCraftAPI.Entities{
                 context.Quizzes.AddRange(
                     new Quiz.Quiz
                     {
-                        Name = "Quiz 1"
+                        Name = "Quiz 1",
+                        UserID = 1,
                     },
                     new Quiz.Quiz
                     {
-                        Name = "Quiz 2"
+                        Name = "Quiz 2",
+                        UserID = 1,
                     }
                 );
 

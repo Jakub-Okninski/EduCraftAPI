@@ -114,7 +114,7 @@ namespace EduCraftAPI.Controllers
 
 
         [HttpPost("/presentation/create")]
-        public IActionResult CreatePresentation([FromBody] PresentationRequest request)
+        public IActionResult CreatePresentation([FromBody] TitleUserDTO request)
         {
             var user = _context.Users.FirstOrDefault(u => u.UserID == request.UserId);
             if (user == null)

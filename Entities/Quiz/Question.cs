@@ -4,9 +4,8 @@
     {
         public int QuestionID { get; set; }
         public string Name {  get; set; }
-        public Quiz Quiz { get; set; }
-        public int QuizID { get; set; }
         public ICollection<Answer> Answers { get; set; }
+        public int QuizID { get; set; }
 
 
     }

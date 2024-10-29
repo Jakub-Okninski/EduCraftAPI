@@ -1,18 +1,16 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Presentation;
-using A = DocumentFormat.OpenXml.Drawing;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Drawing;
+using NonVisualGroupShapeProperties = DocumentFormat.OpenXml.Drawing.NonVisualGroupShapeProperties;
+using NonVisualDrawingProperties = DocumentFormat.OpenXml.Drawing.NonVisualDrawingProperties;
+using NonVisualShapeProperties = DocumentFormat.OpenXml.Drawing.NonVisualShapeProperties;
+using NonVisualShapeDrawingProperties = DocumentFormat.OpenXml.Drawing.NonVisualShapeDrawingProperties;
+using TextBody = DocumentFormat.OpenXml.Drawing.TextBody;
+using Shape = DocumentFormat.OpenXml.Drawing.Shape;
 
-namespace EduCraftAPI.Models
-{
-    // Twoje modele danych: Presentation, Slide, Element itd.
-    // ... (Pomijam, bo już je dostarczyłeś)
-}
+
 
 namespace EduCraftAPI.Services
 {
@@ -25,97 +23,48 @@ namespace EduCraftAPI.Services
     {
         public FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData)
         {
-            using (var memoryStream = new MemoryStream())
+            string filePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "test_presentation.pptx");
+
+            // Tworzenie pliku PowerPoint
+            using (PresentationDocument presentationDocument = PresentationDocument.Create(filePath, PresentationDocumentType.Presentation))
             {
-                using (PresentationDocument presentationDocument = PresentationDocument.Create(memoryStream, PresentationDocumentType.Presentation))
-                {
-                    // Utworzenie części prezentacji
-                    PresentationPart presentationPart = presentationDocument.AddPresentationPart();
-                    presentationPart.Presentation = new Presentation();
+                // Dodanie prezentacji
+                PresentationPart presentationPart = presentationDocument.AddPresentationPart();
+                presentationPart.Presentation = new Presentation();
 
-                    // Utworzenie części głównej slajdu
-                    SlideMasterPart slideMasterPart = presentationPart.AddNewPart<SlideMasterPart>();
-                    slideMasterPart.SlideMaster = new SlideMaster(new CommonSlideData(new ShapeTree()));
-                    slideMasterPart.SlideMaster.Append(new SlideLayoutIdList());
+                // Dodanie sekwencji slajdów do prezentacji
+                presentationPart.Presentation.SlideIdList = new SlideIdList();
 
-                    // Utworzenie układu slajdu
-                    SlideLayoutPart slideLayoutPart = slideMasterPart.AddNewPart<SlideLayoutPart>();
-                    slideLayoutPart.SlideLayout = new SlideLayout(new CommonSlideData(new ShapeTree()));
+                // Dodanie slajdu
+                Slide slide = new Slide(new CommonSlideData(new ShapeTree()));
+                SlidePart slidePart = presentationPart.AddNewPart<SlidePart>();
+                slidePart.Slide = slide;
 
-                    // Powiązanie układu slajdu z częścią główną slajdu
-                    slideMasterPart.SlideMaster.SlideLayoutIdList = new SlideLayoutIdList(new SlideLayoutId() { Id = 1U, RelationshipId = slideMasterPart.GetIdOfPart(slideLayoutPart) });
+                // Ustawienie wymaganych właściwości ShapeTree
+                var shapeTree = slide.GetFirstChild<CommonSlideData>().ShapeTree;
+                shapeTree.AppendChild(new NonVisualGroupShapeProperties(new NonVisualDrawingProperties() { Id = 1, Name = "" },
+                    new DocumentFormat.OpenXml.Drawing.NonVisualGroupShapeDrawingProperties(),
+                    new ApplicationNonVisualDrawingProperties()));
+                shapeTree.AppendChild(new GroupShapeProperties());
 
-                    // Powiązanie części głównej slajdu z częścią prezentacji
-                    presentationPart.Presentation.SlideMasterIdList = new SlideMasterIdList(new SlideMasterId() { Id = 1U, RelationshipId = presentationPart.GetIdOfPart(slideMasterPart) });
+                // Dodanie tekstu do slajdu
+             
+                // Utworzenie SlideId i dodanie go do SlideIdList
+                SlideId slideId = new SlideId() { Id = (UInt32Value)256U, RelationshipId = presentationPart.GetIdOfPart(slidePart) };
+                presentationPart.Presentation.SlideIdList.Append(slideId);
 
-                    // Utworzenie listy identyfikatorów slajdów
-                    SlideIdList slideIdList = presentationPart.Presentation.AppendChild(new SlideIdList());
-
-                    // Iteracja przez slajdy i tworzenie nowego slajdu dla każdego z nich
-                    foreach (var slideData in presentationData.Slides)
-                    {
-                        SlidePart slidePart = presentationPart.AddNewPart<SlidePart>();
-                        slidePart.Slide = new Slide(new CommonSlideData(new ShapeTree()));
-
-                        // Dodawanie zawartości slajdu
-                        AddSlideContent(slidePart, slideData);
-                        UInt32Value id = slideData.Id!=null ? UInt32Value.FromUInt32((uint)slideData.Id) : UInt32Value.FromUInt32(0);
-
-                        // Dodanie slajdu do listy identyfikatorów slajdów
-                        slideIdList.Append(new SlideId() { Id = (UInt32Value)(256 + id), RelationshipId = presentationPart.GetIdOfPart(slidePart) });
-
-                        // Zapisanie slajdu
-                        slidePart.Slide.Save();
-                    }
-
-                    // Zapisanie części
-                    slideMasterPart.SlideMaster.Save();
-                    slideLayoutPart.SlideLayout.Save();
-                    presentationPart.Presentation.Save();
-                }
-
-                // Zapisanie pliku na pulpicie na potrzeby testów
-                File.WriteAllBytes(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "presentation.pptx"), memoryStream.ToArray());
-
-                // Zwrócenie pliku jako wynik
-                return new FileContentResult(memoryStream.ToArray(), "application/vnd.openxmlformats-officedocument.presentationml.presentation")
-                {
-                    FileDownloadName = $"{presentationData.Title}.pptx"
-                };
-            }
-        }
-
-        private void AddSlideContent(SlidePart slidePart, EduCraftAPI.Models.Slide slideData)
-        {
-            var shapeTree = slidePart.Slide.CommonSlideData.ShapeTree;
-
-            // Dodawanie tytułu slajdu
-            if (!string.IsNullOrEmpty(slideData.Title))
-            {
-                var titleShape = shapeTree.AppendChild(new Shape());
-                var titleTextBody = titleShape.AppendChild(new A.TextBody());
-                var titleParagraph = titleTextBody.AppendChild(new A.Paragraph());
-                var titleRun = new A.Run();
-                titleRun.Append(new A.Text(slideData.Title));
-                titleParagraph.Append(titleRun);
+                // Zapisanie zmian
+                presentationPart.Presentation.Save();
             }
 
-            // Dodawanie elementów slajdu
-            if (slideData.Elements != null)
+            // Zwrócenie pliku jako wynik
+            byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
+           // File.Delete(filePath);  // Usunięcie pliku tymczasowego
+
+            return new FileContentResult(fileBytes, "application/vnd.openxmlformats-officedocument.presentationml.presentation")
             {
-                foreach (var element in slideData.Elements)
-                {
-                    var contentShape = shapeTree.AppendChild(new Shape());
-                    var contentTextBody = contentShape.AppendChild(new A.TextBody());
-                    var contentParagraph = contentTextBody.AppendChild(new A.Paragraph());
-                    foreach (var op in element.Ops)
-                    {
-                        var contentRun = new A.Run();
-                        contentRun.Append(new A.Text(op.Insert));
-                        contentParagraph.Append(contentRun);
-                    }
-                }
-            }
+                FileDownloadName = $"{presentationData.Title}.pptx"
+            };
         }
     }
 }

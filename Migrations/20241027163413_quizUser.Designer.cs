@@ -4,6 +4,7 @@ using EduCraftAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduCraftAPI.Migrations
 {
     [DbContext(typeof(DataDbContext))]
-    partial class DataDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241027163413_quizUser")]
+    partial class quizUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -282,20 +285,24 @@ namespace EduCraftAPI.Migrations
 
             modelBuilder.Entity("EduCraftAPI.Entities.Quiz.Answer", b =>
                 {
-                    b.HasOne("EduCraftAPI.Entities.Quiz.Question", null)
+                    b.HasOne("EduCraftAPI.Entities.Quiz.Question", "Question")
                         .WithMany("Answers")
                         .HasForeignKey("QuestionID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Question");
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Quiz.Question", b =>
                 {
-                    b.HasOne("EduCraftAPI.Entities.Quiz.Quiz", null)
+                    b.HasOne("EduCraftAPI.Entities.Quiz.Quiz", "Quiz")
                         .WithMany("Questions")
                         .HasForeignKey("QuizID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Quiz");
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Quiz.Quiz", b =>

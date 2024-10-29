@@ -4,6 +4,7 @@ using EduCraftAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduCraftAPI.Migrations
 {
     [DbContext(typeof(DataDbContext))]
-    partial class DataDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241027194433_dupadasddsadas")]
+    partial class dupadasddsadas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -135,7 +138,7 @@ namespace EduCraftAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("QuestionID")
+                    b.Property<int?>("QuestionID")
                         .HasColumnType("int");
 
                     b.HasKey("AnswerID");
@@ -157,7 +160,7 @@ namespace EduCraftAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("QuizID")
+                    b.Property<int?>("QuizID")
                         .HasColumnType("int");
 
                     b.HasKey("QuestionID");
@@ -284,18 +287,14 @@ namespace EduCraftAPI.Migrations
                 {
                     b.HasOne("EduCraftAPI.Entities.Quiz.Question", null)
                         .WithMany("Answers")
-                        .HasForeignKey("QuestionID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("QuestionID");
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Quiz.Question", b =>
                 {
                     b.HasOne("EduCraftAPI.Entities.Quiz.Quiz", null)
                         .WithMany("Questions")
-                        .HasForeignKey("QuizID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("QuizID");
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Quiz.Quiz", b =>
