@@ -41,7 +41,5 @@ namespace EduCraftAPI.Data
                 .HasIndex(u => u.Email)
                 .IsUnique();
         }
-
-       
     }
 }

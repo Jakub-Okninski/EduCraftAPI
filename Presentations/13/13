@@ -22,6 +22,22 @@
             </Op>
           </Ops>
         </Element>
+        <Element Id="2">
+          <Type>text</Type>
+          <Position>
+            <Top>228</Top>
+            <Left>235</Left>
+          </Position>
+          <Size>
+            <Width>200</Width>
+            <Height>50</Height>
+          </Size>
+          <Ops>
+            <Op>
+              <Insert>&amp;#10;';';l'l'l't&amp;#10;</Insert>
+            </Op>
+          </Ops>
+        </Element>
       </Elements>
     </Slide>
   </Slides>

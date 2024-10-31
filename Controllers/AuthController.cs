@@ -1,6 +1,7 @@
 ﻿using EduCraftAPI.Data;
 using EduCraftAPI.Entities.User;
 using EduCraftAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,64 @@ namespace EduCraftAPI.Controllers
             _context = dataDbContext;
             _passwordHasher = passwordHasher;
             _authenticationSettings = authenticationSettings;
+        }
+
+
+        [Authorize]
+        [HttpGet("/user")]
+        public IActionResult getUser([FromQuery] int userID)
+        {
+
+            var user = _context.Users
+                .Where(u => u.UserID == userID)
+                .Select(u => new
+                {
+                    u.FirstName,
+                    u.LastName,
+                    u.Email,
+                    u.Role.Name,
+         
+                })
+                .FirstOrDefault(); 
+            
+            if (user == null)
+            {
+                return NotFound("Brak użytkownika.");
+            }
+         
+            return Ok(user);
+        }
+
+
+        [Authorize]
+        [HttpPost("/user/password/change")]
+        public IActionResult userPassword([FromBody] UserDTO userDTO)
+        {
+            var user = _context.Users.Include(u => u.Role).FirstOrDefault(u => u.UserID == userDTO.UserID);
+            if (user is null)
+            {
+                return Unauthorized("Brak autoryzacji");
+
+            }
+
+            var result = _passwordHasher.VerifyHashedPassword(user, user.Password, userDTO.Password);
+            if (result == PasswordVerificationResult.Failed)
+            {
+                return Unauthorized("Brak autoryzacji");
+
+            }
+            var hashedPassword = _passwordHasher.HashPassword(user, userDTO.NewPassword);
+            user.Password = hashedPassword;
+
+            try
+            {       
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
+            }
+            return Ok();
         }
 
         [HttpPost("register")]

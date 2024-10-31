@@ -1,11 +1,9 @@
 ﻿using EduCraftAPI.Data;
-using EduCraftAPI.Entities.User;
 using EduCraftAPI.Entities.Presentation;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Xml.Serialization;
 using EduCraftAPI.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using EduCraftAPI.Services;
 
@@ -22,7 +20,8 @@ namespace EduCraftAPI.Controllers
             _context = context;
             _presentationServices = presentationServices;
         }
-        public void SavePresentationToXml(Presentation presentation, string filePath){
+        public void SavePresentationToXml(Presentation presentation, string filePath)
+        {
             string directoryPath = Path.Combine("Presentations", filePath);
             if (!Directory.Exists(directoryPath))
             {
@@ -36,7 +35,8 @@ namespace EduCraftAPI.Controllers
                 xmlSerializer.Serialize(writer, presentation);
             }
         }
-        public Presentation LoadPresentationFromXml(string filePath) {
+        public Presentation LoadPresentationFromXml(string filePath)
+        {
             string fullFilePath = Path.Combine("Presentations", filePath, filePath);
 
             var xmlSerializer = new XmlSerializer(typeof(Presentation));
@@ -58,7 +58,7 @@ namespace EduCraftAPI.Controllers
                 return NoContent();
             }
 
-            return Ok(LoadPresentationFromXml(""+presentation.PresentationsID));
+            return Ok(LoadPresentationFromXml("" + presentation.PresentationsID));
         }
 
 
@@ -69,13 +69,9 @@ namespace EduCraftAPI.Controllers
 
             var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == presentationId);
             if (presentation == null)
-            {      
+            {
                 return NoContent();
             }
-            Debug.WriteLine("                    ");
-            Debug.WriteLine("dupa2.");
-            Debug.WriteLine("                    ");
-
 
             return _presentationServices.GeneratePPTX(LoadPresentationFromXml(presentation.PresentationsID.ToString()));
             //var fileName = "presentation.pptx";
@@ -84,12 +80,12 @@ namespace EduCraftAPI.Controllers
             //return File(fileContent, contentType, fileName);
         }
 
-        [HttpGet("/presentations")] 
-        public IActionResult GetPresentationsByUser([FromQuery] int userId) 
+
+
+
+        [HttpGet("/presentations")]
+        public IActionResult GetPresentationsByUser([FromQuery] int userId)
         {
-
-       
-
             var user = _context.Users.FirstOrDefault(u => u.UserID == userId);
             if (user == null)
             {
@@ -102,14 +98,14 @@ namespace EduCraftAPI.Controllers
                  {
                      PresentationID = p.PresentationsID,
                      Title = p.Title,
-    
+
                  }).ToList();
 
             if (!presentations.Any())
             {
                 return NoContent();
             }
-            return Ok(presentations); 
+            return Ok(presentations);
         }
 
 
@@ -127,7 +123,7 @@ namespace EduCraftAPI.Controllers
                 return NoContent();
             }
             Presentations presentation = new Presentations();
-            presentation.Title = request.Title; 
+            presentation.Title = request.Title;
             presentation.User = user;
             presentation.CreationDate = DateTime.Now;
             presentation.IsPublic = false;
@@ -151,7 +147,8 @@ namespace EduCraftAPI.Controllers
                 presentationData.Slides = [];
                 this.SavePresentationToXml(presentationData, "" + newPresentationId);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 _context.Remove(presentation);
                 _context.SaveChanges();
                 return StatusCode(500, "Wewnętrzny błąd serwera.");
@@ -161,7 +158,8 @@ namespace EduCraftAPI.Controllers
         }
 
         [HttpPost("/presentation/save")]
-        public IActionResult SavePresentation([FromBody] Presentation presentation){
+        public IActionResult SavePresentation([FromBody] Presentation presentation)
+        {
             Debug.WriteLine("Zapisywanie...");
             if (presentation == null)
             {
@@ -169,7 +167,7 @@ namespace EduCraftAPI.Controllers
             }
             try
             {
-                SavePresentationToXml(presentation, ""+ presentation.PresentationID);
+                SavePresentationToXml(presentation, "" + presentation.PresentationID);
                 Debug.WriteLine("Zapisano.");
                 return Ok($"Prezentacja została zapisana jako ");
             }

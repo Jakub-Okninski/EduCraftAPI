@@ -1,7 +1,5 @@
 ﻿using EduCraftAPI.Data;
-using EduCraftAPI.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace EduCraftAPI.Controllers
 {

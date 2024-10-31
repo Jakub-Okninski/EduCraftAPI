@@ -1,9 +1,5 @@
-﻿using Azure.Core;
-using EduCraftAPI.Data;
+﻿using EduCraftAPI.Data;
 using EduCraftAPI.Entities.Flashcards;
-using EduCraftAPI.Entities.Presentation;
-using EduCraftAPI.Entities.User;
-using EduCraftAPI.Migrations;
 using EduCraftAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -52,7 +48,6 @@ namespace EduCraftAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Błąd podczas zapisywania prezentacji: {ex.Message}");
-
             }
 
             return Ok();
@@ -117,6 +112,7 @@ namespace EduCraftAPI.Controllers
             return Ok(flashcar);
         }
 
+
         [HttpDelete("/flashcard/remove")]
         public IActionResult RemoveFlashcards([FromQuery] int flashcardsID)
         {
@@ -133,6 +129,7 @@ namespace EduCraftAPI.Controllers
 
             return Ok("Flashcard zostało pomyślnie usunięte.");
         }
+
 
         [HttpPost("/flashcards/create")]
         public IActionResult CreateFlashcards([FromBody] CreateFlashcardsDto createFlashcardsDto)

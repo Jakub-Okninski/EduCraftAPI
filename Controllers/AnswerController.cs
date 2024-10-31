@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using EduCraftAPI.Data;
+﻿using EduCraftAPI.Data;
 using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -50,8 +49,8 @@ namespace EduCraftAPI.Controllers
             return Ok(question);
         }
 
-        [HttpDelete("answer/remove/{answerId}")]
-        public async Task<IActionResult> RemoveAnswer(int answerId)
+        [HttpDelete("answer/remove")]
+        public async Task<IActionResult> RemoveAnswer([FromQuery]int answerId)
         {
             // Find the answer by ID
             var answer = await _context.Answers.FindAsync(answerId);

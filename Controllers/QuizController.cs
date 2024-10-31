@@ -1,15 +1,9 @@
-﻿using DocumentFormat.OpenXml.InkML;
-using DocumentFormat.OpenXml.Office.CustomUI;
-using DocumentFormat.OpenXml.Office.SpreadSheetML.Y2023.MsForms;
-using EduCraftAPI.Data;
-using EduCraftAPI.Entities;
-using EduCraftAPI.Entities.Flashcards;
+﻿using EduCraftAPI.Data;
 using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
 using Question = EduCraftAPI.Entities.Quiz.Question;
 
 namespace EduCraftAPI.Controllers
@@ -18,7 +12,8 @@ namespace EduCraftAPI.Controllers
     public class QuizController : Controller
     {
         private readonly DataDbContext _context;
-        public QuizController(DataDbContext context) {
+        public QuizController(DataDbContext context)
+        {
             _context = context;
         }
 
@@ -39,9 +34,10 @@ namespace EduCraftAPI.Controllers
         public IActionResult quiz([FromQuery] int QuizID)
         {
             var quiz = _context.Quizzes
-              .Include(p => p.Questions).ThenInclude(q => q.Answers)
-                .FirstOrDefault(p => p.QuizID == QuizID);
-                
+               .Include(q => q.Questions)
+               .ThenInclude(q => q.Answers)
+               .Where(q => q.QuizID == QuizID).FirstOrDefault();
+
             if (quiz == null)
             {
                 return NoContent();
@@ -60,6 +56,86 @@ namespace EduCraftAPI.Controllers
             }
             return Ok(quiz);
         }
+        [AllowAnonymous]
+        [HttpPost("/check/quiz")]
+        public IActionResult checkQuiz([FromBody] CheckQuizDTO checkQuizDTO)
+        {
+
+            var quiz = _context.Quizzes
+                 .Include(q => q.Questions)
+                 .ThenInclude(q => q.Answers)
+                 .Where(q => q.QuizID == checkQuizDTO.QuizID).FirstOrDefault();
+            if (quiz == null)
+            {
+                return NotFound();
+            }
+
+            var correctAnswerIds = quiz.Questions
+                .SelectMany(q => q.Answers)
+                .Where(a => a.IsCorrect)
+                .Select(a => a.AnswerID)
+                .ToList();
+
+            var selectedAnswerIds = checkQuizDTO.Answers?.Select(a => a.AnswerID) ?? new List<int>();
+
+            var correctCount = selectedAnswerIds.Intersect(correctAnswerIds).Count();
+
+            var incorrectCount = selectedAnswerIds.Count(a => !correctAnswerIds.Contains(a));
+
+            return Ok(new { correctCount, incorrectCount, totalCorrect = correctAnswerIds.Count, correctAnswer = correctAnswerIds });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("/Quiz/Look")]
+        public async Task<IActionResult> QuizGet([FromQuery] int quizID)
+        {
+
+            var quiz = _context.Quizzes
+           .Where(p => p.QuizID == quizID)
+           .Select(p => new
+           {
+               p.QuizID,
+               p.Name,
+               Questions = p.Questions.Select(q => new
+               {
+                   q.QuestionID,
+                   q.Name,
+                   Answers = q.Answers.Select(a => new
+                   {
+                       a.AnswerID,
+                       a.Name
+                   }).ToList()
+               }).ToList()
+           })
+           .FirstOrDefault();
+
+            if (quiz == null)
+            {
+                return NoContent();
+            }
+
+            return Ok(quiz);
+        }
+
+
+        [HttpDelete("/question/remove")]
+        public async Task<IActionResult> Removequestion([FromQuery] int questionID)
+        {
+            var question = await _context.Questions
+                .Where(q => q.QuestionID == questionID)
+                .FirstOrDefaultAsync();
+
+            if (question == null)
+            {
+                return NotFound("Answer not found.");
+            }
+
+            _context.Questions.Remove(question);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
         [HttpPost("/question/crerate")]
         public IActionResult questionGenerate([FromBody] newQuestionDTO questionNew)
         {
@@ -76,7 +152,6 @@ namespace EduCraftAPI.Controllers
 
             try
             {
-
                 var answerList = new List<Answer>();
                 foreach (var a in questionNew.Answers)
                 {
@@ -84,7 +159,7 @@ namespace EduCraftAPI.Controllers
                 }
                 var newQuestion = new Question
                 {
-                    QuizID= quiz.QuizID,
+                    QuizID = quiz.QuizID,
                     Name = questionNew.Name,
                     Answers = answerList
                 };
@@ -121,36 +196,28 @@ namespace EduCraftAPI.Controllers
                     User = user,
                     Name = quizRequest.Title,
                     Questions = new List<Question>
-    {
-        new Question
-        { 
-            Name = "What is the capital of France?",
-            Answers = new List<Answer>
-            {
-                new Answer { Name = "Paris", IsCorrect = true },
-                new Answer { Name = "Berlin", IsCorrect = false },
-                new Answer { Name = "Madrid", IsCorrect = false }
-            }
-        }
-    }
+                    {
+                        new Question
+                        {
+                            Name = "What is the capital of France?",
+                            Answers = new List<Answer>
+                            {
+                                new Answer { Name = "Paris", IsCorrect = true },
+                                new Answer { Name = "Berlin", IsCorrect = false },
+                                new Answer { Name = "Madrid", IsCorrect = false }
+                            }
+                        }
+                    }
                 };
 
                 _context.Quizzes.Add(quiz);
                 _context.SaveChanges();
-                    return Ok(quiz);
+                return Ok(quiz);
             }
             catch (Exception e)
             {
                 return StatusCode(500, $"Internal server error: {e.Message}");
             }
-          
-
-
-        
         }
-
-
-     
-
     }
 }
