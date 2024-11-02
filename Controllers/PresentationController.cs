@@ -64,7 +64,7 @@ namespace EduCraftAPI.Controllers
 
         [AllowAnonymous]
         [HttpGet("/generate/presentation")]
-        public IActionResult generatePresentation([FromQuery] int presentationId)
+        public IActionResult generatePresentation([FromQuery] int presentationId, string type)
         {
 
             var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == presentationId);
@@ -73,7 +73,7 @@ namespace EduCraftAPI.Controllers
                 return NoContent();
             }
 
-            return _presentationServices.GeneratePPTX(LoadPresentationFromXml(presentation.PresentationsID.ToString()));
+            return _presentationServices.GeneratePPTX(LoadPresentationFromXml(presentation.PresentationsID.ToString()),type);
             //var fileName = "presentation.pptx";
             //var contentType = "application/vnd.openxmlformats-officedocument.presentationml.presentation"; 
 

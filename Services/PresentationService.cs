@@ -1,70 +1,114 @@
-﻿using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Presentation;
+﻿using GemBox.Presentation;
 using Microsoft.AspNetCore.Mvc;
-using DocumentFormat.OpenXml.Drawing;
-using NonVisualGroupShapeProperties = DocumentFormat.OpenXml.Drawing.NonVisualGroupShapeProperties;
-using NonVisualDrawingProperties = DocumentFormat.OpenXml.Drawing.NonVisualDrawingProperties;
-using NonVisualShapeProperties = DocumentFormat.OpenXml.Drawing.NonVisualShapeProperties;
-using NonVisualShapeDrawingProperties = DocumentFormat.OpenXml.Drawing.NonVisualShapeDrawingProperties;
-using TextBody = DocumentFormat.OpenXml.Drawing.TextBody;
-using Shape = DocumentFormat.OpenXml.Drawing.Shape;
-
 
 
 namespace EduCraftAPI.Services
 {
     public interface IPresentationService
     {
-        FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData);
+        FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData, string type = "pptx");
     }
 
     public class PresentationService : IPresentationService
     {
-        public FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData)
+
+        public FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData ,string type = "pptx")
         {
-            string filePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "test_presentation.pptx");
+            var presentation = new PresentationDocument();
 
-            // Tworzenie pliku PowerPoint
-            using (PresentationDocument presentationDocument = PresentationDocument.Create(filePath, PresentationDocumentType.Presentation))
+
+            presentation.SlideSize.Width = 1000;
+
+            presentation.SlideSize.Height = 560;
+
+
+            foreach (var s in presentationData.Slides)
             {
-                // Dodanie prezentacji
-                PresentationPart presentationPart = presentationDocument.AddPresentationPart();
-                presentationPart.Presentation = new Presentation();
+                var slide = presentation.Slides.AddNew(SlideLayoutType.Custom);
 
-                // Dodanie sekwencji slajdów do prezentacji
-                presentationPart.Presentation.SlideIdList = new SlideIdList();
+                foreach (var e in s.Elements)
+                {
+                    if (e.Type == "text")
+                    {
+                        var textShape = slide.Content.AddTextBox(ShapeGeometryType.Rectangle, (double)e.Position.Left, (double)e.Position.Top, (double)e.Size.Width, (double)e.Size.Height);
+                        short i = 0;
+                        foreach (var o in e.Ops)
+                        {
+                            var paragraph = textShape.AddParagraph();
+                            var run = paragraph.AddRun(o.Insert);
+                            if (i+1 < e.Ops.Count - 1)
+                            {
+                                run.Text = o.Insert.TrimEnd('\n');
+                            }           
+                            if (o.Attributes?.Bold == true)
+                            {
+                                run.Format.Bold = true;
+                            }
+                            i++;    
+                        }
+                   
+                    }
+                    if (e.Type == "image")
+                    {
+                 
+                        using (var imageStream = ConvertBase64ToStream(e.Url))
+                        {
+                        if (imageStream != null)
+                        {
+                            slide.Content.AddPicture(PictureContentType.Unknown, imageStream, (double)e.Position.Left, (double)e.Position.Top, (double)e.Size.Width, (double)e.Size.Height);
+                        } 
+                        }
+                    }
+                }   
+            }
+            if (type == "pptx")
+            {
+                var stream = new MemoryStream();
+                presentation.Save(stream, SaveOptions.Pptx);
 
-                // Dodanie slajdu
-                Slide slide = new Slide(new CommonSlideData(new ShapeTree()));
-                SlidePart slidePart = presentationPart.AddNewPart<SlidePart>();
-                slidePart.Slide = slide;
+                stream.Position = 0;
 
-                // Ustawienie wymaganych właściwości ShapeTree
-                var shapeTree = slide.GetFirstChild<CommonSlideData>().ShapeTree;
-                shapeTree.AppendChild(new NonVisualGroupShapeProperties(new NonVisualDrawingProperties() { Id = 1, Name = "" },
-                    new DocumentFormat.OpenXml.Drawing.NonVisualGroupShapeDrawingProperties(),
-                    new ApplicationNonVisualDrawingProperties()));
-                shapeTree.AppendChild(new GroupShapeProperties());
+                return new FileStreamResult(stream, "application/vnd.openxmlformats-officedocument.presentationml.presentation")
+                {
+                    FileDownloadName = $"{presentationData.Title}.pptx"
+                };
+            }
+            if (type == "pdf")
+            {
+                var stream = new MemoryStream();
+                presentation.Save(stream, SaveOptions.Pdf);
 
-                // Dodanie tekstu do slajdu
-             
-                // Utworzenie SlideId i dodanie go do SlideIdList
-                SlideId slideId = new SlideId() { Id = (UInt32Value)256U, RelationshipId = presentationPart.GetIdOfPart(slidePart) };
-                presentationPart.Presentation.SlideIdList.Append(slideId);
+                stream.Position = 0;
 
-                // Zapisanie zmian
-                presentationPart.Presentation.Save();
+                return new FileStreamResult(stream, "application/pdf")
+                {
+                    FileDownloadName = $"{presentationData.Title}.pdf"
+                };
             }
 
-            // Zwrócenie pliku jako wynik
-            byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
-           // File.Delete(filePath);  // Usunięcie pliku tymczasowego
-
+            byte[] fileBytes = [];
             return new FileContentResult(fileBytes, "application/vnd.openxmlformats-officedocument.presentationml.presentation")
             {
                 FileDownloadName = $"{presentationData.Title}.pptx"
             };
+        }
+
+
+        private Stream ConvertBase64ToStream(string base64String)
+        {
+            // Usunięcie prefiksu, jeśli występuje
+            var base64Data = base64String.Replace("data:image/png;base64,", "");
+
+            // Konwersja Base64 na bajty
+            byte[] imageBytes = Convert.FromBase64String(base64Data);
+
+            // Utworzenie strumienia z bajtów
+            var imageStream = new MemoryStream(imageBytes);
+
+            // Zresetuj pozycję strumienia do początku
+            imageStream.Position = 0;
+
+            return imageStream;
         }
     }
 }
