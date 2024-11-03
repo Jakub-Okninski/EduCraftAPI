@@ -20,18 +20,51 @@ namespace EduCraftAPI.Services
             presentation.SlideSize.Width = 1000;
 
             presentation.SlideSize.Height = 560;
+            string data = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+            if (type == "pptx")
+            {
+                data = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+            }
+            if (type == "pdf")
+            {
+                data = "application/pdf";
+            }
+            if (presentationData== null)
+            {
 
+                byte[] fileBytes2 = [];
+                return new FileContentResult(fileBytes2, data)
+                {
+                    FileDownloadName = $"{presentationData.Title}."+ type
+                };
+            }
+            if (!presentationData.Slides.Any()){
+                byte[] fileBytes2 = [];
+                return new FileContentResult(fileBytes2, data)
+                {
+                    FileDownloadName = $"{presentationData.Title}." + type
+                };
+            }
 
             foreach (var s in presentationData.Slides)
             {
                 var slide = presentation.Slides.AddNew(SlideLayoutType.Custom);
 
+                if (!s.Elements.Any())
+                {
+                    continue;
+                }
                 foreach (var e in s.Elements)
                 {
                     if (e.Type == "text")
                     {
+                        if (!e.Ops.Any())
+                        {
+                            continue;
+                        }
                         var textShape = slide.Content.AddTextBox(ShapeGeometryType.Rectangle, (double)e.Position.Left, (double)e.Position.Top, (double)e.Size.Width, (double)e.Size.Height);
                         short i = 0;
+                      
                         foreach (var o in e.Ops)
                         {
                             var paragraph = textShape.AddParagraph();
@@ -87,9 +120,9 @@ namespace EduCraftAPI.Services
             }
 
             byte[] fileBytes = [];
-            return new FileContentResult(fileBytes, "application/vnd.openxmlformats-officedocument.presentationml.presentation")
+            return new FileContentResult(fileBytes, data)
             {
-                FileDownloadName = $"{presentationData.Title}.pptx"
+                FileDownloadName = $"{presentationData.Title}."+type
             };
         }
 

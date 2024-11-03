@@ -60,7 +60,18 @@ namespace EduCraftAPI.Controllers
 
             return Ok(LoadPresentationFromXml("" + presentation.PresentationsID));
         }
+        [HttpGet("/presentation/data")]
+        [AllowAnonymous]
+        public IActionResult GetPresentationData([FromQuery] int presentationId)
+        {
+            var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == presentationId);
+            if (presentation == null)
+            {
+                return NoContent();
+            }
 
+            return Ok(presentation);
+        }
 
         [AllowAnonymous]
         [HttpGet("/generate/presentation")]
@@ -109,16 +120,45 @@ namespace EduCraftAPI.Controllers
         }
 
 
+
+
+        [HttpPost("/presentation/update/isPublic")]
+        public IActionResult updatePresentation([FromBody] IsPublicDTO request)
+        {
+            var presentation = _context.Presentation.FirstOrDefault(u => u.PresentationsID == request.ItemID);
+            if (presentation == null)
+            {
+                return NoContent();
+            }
+            try
+            {
+            presentation.IsPublic = request.IsPublic;
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
+            }
+            return StatusCode(200, presentation);
+        }
+
+
+
+
+
         [HttpPost("/presentation/create")]
         public IActionResult CreatePresentation([FromBody] TitleUserDTO request)
         {
+
+         
+
             var user = _context.Users.FirstOrDefault(u => u.UserID == request.UserId);
             if (user == null)
             {
                 return NoContent();
             }
-            var category = _context.Category.FirstOrDefault(u => u.Name == "IT");
-            if (category == null)
+            var catrgory = _context.Category.FirstOrDefault(u => u.CategoryID == request.CategoryID);
+            if (catrgory == null)
             {
                 return NoContent();
             }
@@ -126,8 +166,8 @@ namespace EduCraftAPI.Controllers
             presentation.Title = request.Title;
             presentation.User = user;
             presentation.CreationDate = DateTime.Now;
-            presentation.IsPublic = false;
-            presentation.Category = category;
+            presentation.IsPublic = request.IsPublic;
+            presentation.Category = catrgory;
             try
             {
                 _context.Add(presentation);

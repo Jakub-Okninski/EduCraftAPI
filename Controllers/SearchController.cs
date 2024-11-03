@@ -24,6 +24,7 @@ namespace EduCraftAPI.Controllers
         )
         {
             var query = _context.Presentation.AsQueryable();
+            query = query.Where(p => p.IsPublic == true);
 
             if (!string.IsNullOrWhiteSpace(phrase))
             {
