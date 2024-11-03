@@ -1,4 +1,6 @@
-﻿using EduCraftAPI.Data;
+﻿using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Spreadsheet;
+using EduCraftAPI.Data;
 using EduCraftAPI.Entities.User;
 using EduCraftAPI.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -49,7 +51,31 @@ namespace EduCraftAPI.Controllers
          
             return Ok(user);
         }
+        [Authorize]
+        [HttpGet("/user/statistic")]
+        public IActionResult getUserStatistic([FromQuery] int userID)
+        {
+            var user = _context.Users.FirstOrDefault(p => p.UserID == userID);
 
+            if (user == null)
+            {
+                return NotFound("Brak użytkownika.");
+            }
+
+            var PresentationCount = _context.Presentation.Count(p => p.UserID == userID);
+            var QuizzesCount = _context.Quizzes.Count(p => p.UserID == userID);
+            var FlashcardsCount = _context.Flashcards.Count(p => p.UserID == userID);
+
+
+          
+
+            return Ok(new
+            {
+                PresentationCount,
+                QuizzesCount,
+                FlashcardsCount
+            });
+        }
 
         [Authorize]
         [HttpPost("/user/password/change")]

@@ -10,23 +10,7 @@ namespace EduCraftAPI.Entities{
                 serviceProvider.GetRequiredService<
                     DbContextOptions<DataDbContext>>()))
             {
-                if (!context.Quizzes.Any())
-                {
-                context.Quizzes.AddRange(
-                    new Quiz.Quiz
-                    {
-                        Name = "Quiz 1",
-                        UserID = 1,
-                    },
-                    new Quiz.Quiz
-                    {
-                        Name = "Quiz 2",
-                        UserID = 1,
-                    }
-                );
-
-                    context.SaveChanges();
-                }
+                
 
                 if (!context.Category.Any())
                 {
