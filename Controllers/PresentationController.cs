@@ -229,15 +229,15 @@ namespace EduCraftAPI.Controllers
                 return StatusCode(500, "Wewnętrzny błąd serwera. base");
             }
             int newPresentationId = presentation.PresentationsID;
+            Presentation presentationData = new Presentation();
+            presentationData.Title = request.Title;
+            presentationData.PresentationID = newPresentationId;
+            presentationData.Slides = [];
 
+            this.SavePresentationToXml(presentationData, "" + newPresentationId);
             try
             {
-                Presentation presentationData = new Presentation();
-                presentationData.Title = request.Title;
-                presentationData.PresentationID = newPresentationId;
-                presentationData.Slides = [];
-               
-                this.SavePresentationToXml(presentationData, "" + newPresentationId);
+              
             }
             catch (Exception ex)
             {
