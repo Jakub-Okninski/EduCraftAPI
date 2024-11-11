@@ -11,6 +11,7 @@ namespace EduCraftAPI.Services
 
     public class PresentationService : IPresentationService
     {
+        static PresentationService() => ComponentInfo.SetLicense("FREE-LIMITED-KEY");
 
         public FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData ,string type = "pptx")
         {

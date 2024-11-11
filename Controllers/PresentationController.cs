@@ -7,6 +7,7 @@ using EduCraftAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using EduCraftAPI.Services;
 
+
 namespace EduCraftAPI.Controllers
 {
     [Authorize]
@@ -22,14 +23,16 @@ namespace EduCraftAPI.Controllers
         }
         public void SavePresentationToXml(Presentation presentation, string filePath)
         {
+          
+
             string directoryPath = Path.Combine("Presentations", filePath);
             if (!Directory.Exists(directoryPath))
             {
                 Directory.CreateDirectory(directoryPath);
             }
-            string fullFilePath = Path.Combine(directoryPath, filePath);
+
             var xmlSerializer = new XmlSerializer(typeof(Presentation));
-            using (var stream = new FileStream(fullFilePath, FileMode.Create))
+            using (var stream = new FileStream(directoryPath, FileMode.Create))
             using (var writer = new StreamWriter(stream))
             {
                 xmlSerializer.Serialize(writer, presentation);
@@ -37,7 +40,7 @@ namespace EduCraftAPI.Controllers
         }
         public Presentation LoadPresentationFromXml(string filePath)
         {
-            string fullFilePath = Path.Combine("Presentations", filePath, filePath);
+            string fullFilePath = Path.Combine("Presentations", filePath);
 
             var xmlSerializer = new XmlSerializer(typeof(Presentation));
             using (var stream = new FileStream(fullFilePath, FileMode.Open))
@@ -46,6 +49,59 @@ namespace EduCraftAPI.Controllers
                 return (Presentation)xmlSerializer.Deserialize(reader);
             }
         }
+
+        [AllowAnonymous]
+        [HttpPost("/presentation/upload/image")]
+        public async Task<IActionResult> UploadImage([FromForm] ImgSlideDTO imgSlideDTO)
+        {
+            if (imgSlideDTO.Image == null || imgSlideDTO.Image.Length == 0)
+            {
+                return BadRequest("No file uploaded.");
+            }
+
+            string uploadsFolder = Path.Combine("UserImg","User"+imgSlideDTO.UserID);
+
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(imgSlideDTO.Image.FileName);
+            var filePath = Path.Combine(uploadsFolder, fileName);
+            try
+            {
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imgSlideDTO.Image.CopyToAsync(stream);
+                }
+            }
+            catch(Exception e)
+            {
+
+            }
+            Presentation p = LoadPresentationFromXml(imgSlideDTO.PresentationID+"");
+            p.Slides?.ForEach(s =>
+            {
+                if (s.Id == imgSlideDTO.SlideID)
+                {
+                    Element e = new Element();
+                    EduCraftAPI.Models.Position p = new EduCraftAPI.Models.Position();
+
+                    p.Left = imgSlideDTO.Position.Left;
+                    p.Top = imgSlideDTO.Position.Top;
+
+                    e.Position = p;
+                    e.Type = "image";
+                    e.Url = fileName;
+
+                    s.Elements?.Add(e);
+
+                }
+            });
+            this.SavePresentationToXml(p, imgSlideDTO.PresentationID + "");
+
+            return Ok(new { FilePath = filePath, FileName = fileName });
+        }
+
 
 
         [HttpGet("/presentation")]
@@ -85,10 +141,7 @@ namespace EduCraftAPI.Controllers
             }
 
             return _presentationServices.GeneratePPTX(LoadPresentationFromXml(presentation.PresentationsID.ToString()),type);
-            //var fileName = "presentation.pptx";
-            //var contentType = "application/vnd.openxmlformats-officedocument.presentationml.presentation"; 
-
-            //return File(fileContent, contentType, fileName);
+      
         }
 
 
@@ -110,13 +163,13 @@ namespace EduCraftAPI.Controllers
                      PresentationID = p.PresentationsID,
                      Title = p.Title,
 
-                 }).ToList();
+                 });
 
             if (!presentations.Any())
             {
                 return NoContent();
             }
-            return Ok(presentations);
+            return Ok(presentations.ToList());
         }
 
 
@@ -149,9 +202,6 @@ namespace EduCraftAPI.Controllers
         [HttpPost("/presentation/create")]
         public IActionResult CreatePresentation([FromBody] TitleUserDTO request)
         {
-
-         
-
             var user = _context.Users.FirstOrDefault(u => u.UserID == request.UserId);
             if (user == null)
             {
@@ -162,6 +212,7 @@ namespace EduCraftAPI.Controllers
             {
                 return NoContent();
             }
+
             Presentations presentation = new Presentations();
             presentation.Title = request.Title;
             presentation.User = user;
@@ -175,7 +226,7 @@ namespace EduCraftAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Wewnętrzny błąd serwera.");
+                return StatusCode(500, "Wewnętrzny błąd serwera. base");
             }
             int newPresentationId = presentation.PresentationsID;
 
@@ -185,13 +236,14 @@ namespace EduCraftAPI.Controllers
                 presentationData.Title = request.Title;
                 presentationData.PresentationID = newPresentationId;
                 presentationData.Slides = [];
+               
                 this.SavePresentationToXml(presentationData, "" + newPresentationId);
             }
             catch (Exception ex)
             {
                 _context.Remove(presentation);
                 _context.SaveChanges();
-                return StatusCode(500, "Wewnętrzny błąd serwera.");
+                return StatusCode(500, "Wewnętrzny błąd serwera. file");
             }
 
             return StatusCode(201, presentation);
