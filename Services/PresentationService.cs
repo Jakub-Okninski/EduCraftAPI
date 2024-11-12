@@ -1,4 +1,5 @@
-﻿using GemBox.Presentation;
+﻿using EduCraftAPI.Models;
+using GemBox.Presentation;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -6,14 +7,14 @@ namespace EduCraftAPI.Services
 {
     public interface IPresentationService
     {
-        FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData, string type = "pptx");
+        FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData, int ID, string type = "pptx");
     }
 
     public class PresentationService : IPresentationService
     {
         static PresentationService() => ComponentInfo.SetLicense("FREE-LIMITED-KEY");
 
-        public FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData ,string type = "pptx")
+        public FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData, int ID , string type = "pptx")
         {
             var presentation = new PresentationDocument();
 
@@ -46,6 +47,7 @@ namespace EduCraftAPI.Services
                     FileDownloadName = $"{presentationData.Title}." + type
                 };
             }
+            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserImg", "User" + ID);
 
             foreach (var s in presentationData.Slides)
             {
@@ -84,8 +86,8 @@ namespace EduCraftAPI.Services
                     }
                     if (e.Type == "image")
                     {
-                 
-                        using (var imageStream = ConvertBase64ToStream(e.Url))
+                       
+                        using (var imageStream = ReadFileAsStream(Path.Combine(uploadsFolder, e.PathName)))
                         {
                         if (imageStream != null)
                         {
@@ -144,5 +146,24 @@ namespace EduCraftAPI.Services
 
             return imageStream;
         }
+        public Stream ReadFileAsStream(string filePath)
+        {
+            try
+            {
+                // Otwiera plik do odczytu i zwraca go jako Stream
+                return new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.WriteLine($"Plik nie został znaleziony: {ex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Wystąpił błąd podczas otwierania pliku: {ex.Message}");
+                return null;
+            }
+        }
+
     }
 }

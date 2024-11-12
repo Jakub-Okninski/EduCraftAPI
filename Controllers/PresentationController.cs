@@ -6,6 +6,10 @@ using System.Xml.Serialization;
 using EduCraftAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using EduCraftAPI.Services;
+using Path = System.IO.Path;
+using SixLabors.ImageSharp;
+using System.Drawing;
+using System.Xml.Linq;
 
 
 namespace EduCraftAPI.Controllers
@@ -21,18 +25,18 @@ namespace EduCraftAPI.Controllers
             _context = context;
             _presentationServices = presentationServices;
         }
-        public void SavePresentationToXml(Presentation presentation, string filePath)
-        {
-          
 
-            string directoryPath = Path.Combine("Presentations", filePath);
+        public void SavePresentationToXml(Presentation presentation, string filename)
+        {
+            string directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "Presentations");
+
             if (!Directory.Exists(directoryPath))
             {
                 Directory.CreateDirectory(directoryPath);
             }
-
+            string fullFilePath = Path.Combine(directoryPath, filename);
             var xmlSerializer = new XmlSerializer(typeof(Presentation));
-            using (var stream = new FileStream(directoryPath, FileMode.Create))
+            using (var stream = new FileStream(fullFilePath, FileMode.Create))
             using (var writer = new StreamWriter(stream))
             {
                 xmlSerializer.Serialize(writer, presentation);
@@ -40,7 +44,8 @@ namespace EduCraftAPI.Controllers
         }
         public Presentation LoadPresentationFromXml(string filePath)
         {
-            string fullFilePath = Path.Combine("Presentations", filePath);
+            string directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "Presentations");
+            string fullFilePath = Path.Combine(directoryPath, filePath);
 
             var xmlSerializer = new XmlSerializer(typeof(Presentation));
             using (var stream = new FileStream(fullFilePath, FileMode.Open))
@@ -49,6 +54,7 @@ namespace EduCraftAPI.Controllers
                 return (Presentation)xmlSerializer.Deserialize(reader);
             }
         }
+
 
         [AllowAnonymous]
         [HttpPost("/presentation/upload/image")]
@@ -59,47 +65,108 @@ namespace EduCraftAPI.Controllers
                 return BadRequest("No file uploaded.");
             }
 
-            string uploadsFolder = Path.Combine("UserImg","User"+imgSlideDTO.UserID);
-
+            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserImg", "User" + imgSlideDTO.UserID);
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
             }
+
+            
             var fileName = Guid.NewGuid().ToString() + Path.GetExtension(imgSlideDTO.Image.FileName);
             var filePath = Path.Combine(uploadsFolder, fileName);
+            Element e = new Element();
+
             try
             {
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                using (var image = System.Drawing.Image.FromStream(imgSlideDTO.Image.OpenReadStream()))
                 {
-                    await imgSlideDTO.Image.CopyToAsync(stream);
+                    int maxWidth = 854;
+                    int maxHeight = 480;
+
+                    int newWidth = image.Width;
+                    int newHeight = image.Height;
+
+                    if (image.Width > maxWidth || image.Height > maxHeight)
+                    {
+                        float ratioX = (float)maxWidth / image.Width;
+                        float ratioY = (float)maxHeight / image.Height;
+                        float ratio = Math.Min(ratioX, ratioY);
+
+                        newWidth = (int)(image.Width * ratio);
+                        newHeight = (int)(image.Height * ratio);
+                    }
+
+                    using (var resizedImage = new Bitmap(newWidth, newHeight))
+                    {
+                        using (var graphics = Graphics.FromImage(resizedImage))
+                        {
+                            graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                            graphics.DrawImage(image, 0, 0, newWidth, newHeight);
+                        }
+
+
+                        resizedImage.Save(filePath, System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                        using (var memoryStream = new MemoryStream())
+                        {
+                            resizedImage.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Jpeg);
+                            string base64Image = Convert.ToBase64String(memoryStream.ToArray());
+                            string fileNameLower = fileName.ToLower();
+                            if (fileNameLower.EndsWith(".jpg") || fileNameLower.EndsWith(".jpeg"))
+                            {
+                                base64Image = "data:image/jpeg;base64," + base64Image;
+                            }
+                            else if (fileNameLower.EndsWith(".png"))
+                            {
+                                base64Image = "data:image/png;base64," + base64Image;
+                            }
+                            else if (fileNameLower.EndsWith(".gif"))
+                            {
+                                base64Image = "data:image/gif;base64," + base64Image;
+                            }
+
+                            e.Url = base64Image;
+                        }
+                    }
                 }
             }
-            catch(Exception e)
+            catch (Exception ex)
             {
-
+                return BadRequest($"Error resizing the image: {ex.Message}");
             }
-            Presentation p = LoadPresentationFromXml(imgSlideDTO.PresentationID+"");
-            p.Slides?.ForEach(s =>
+
+            // Dodajemy dodatkowe informacje do slajdu i elementu
+            Presentation p = LoadPresentationFromXml(imgSlideDTO.PresentationID + "");
+          
+            var slide = p.Slides.FirstOrDefault(s => s.Id == imgSlideDTO.SlideID);
+            if (slide == null)
             {
-                if (s.Id == imgSlideDTO.SlideID)
-                {
-                    Element e = new Element();
-                    EduCraftAPI.Models.Position p = new EduCraftAPI.Models.Position();
+                return NoContent();
+            }
 
-                    p.Left = imgSlideDTO.Position.Left;
-                    p.Top = imgSlideDTO.Position.Top;
+            int id = slide.Elements.Count + 1;
+            e.Id = id;
+            e.Type = "image";
+            e.PathName = fileName;
 
-                    e.Position = p;
-                    e.Type = "image";
-                    e.Url = fileName;
+            // Ustawienie pozycji i rozmiaru elementu
+            e.Position = new EduCraftAPI.Models.Position
+            {
+                Left = imgSlideDTO.PositionX,
+                Top = imgSlideDTO.PositionY
+            };
+            e.Size = new Models.Size
+            {
+                Width = imgSlideDTO.Width,
+                Height = imgSlideDTO.Height
+            };
 
-                    s.Elements?.Add(e);
+            slide.Elements?.Add(e);
+            SavePresentationToXml(p, imgSlideDTO.PresentationID + "");
 
-                }
-            });
-            this.SavePresentationToXml(p, imgSlideDTO.PresentationID + "");
-
-            return Ok(new { FilePath = filePath, FileName = fileName });
+            return Ok(new { Data = e, SlideId = slide.Id });
         }
 
 
@@ -139,8 +206,8 @@ namespace EduCraftAPI.Controllers
             {
                 return NoContent();
             }
-
-            return _presentationServices.GeneratePPTX(LoadPresentationFromXml(presentation.PresentationsID.ToString()),type);
+            
+            return _presentationServices.GeneratePPTX(LoadPresentationFromXml(presentation.PresentationsID.ToString()), presentation.UserID, type);
       
         }
 
@@ -172,7 +239,45 @@ namespace EduCraftAPI.Controllers
             return Ok(presentations.ToList());
         }
 
+        [HttpPost("/presentation/add/slide")]
+        public IActionResult sldieAddPresentation([FromBody] DTOID ID)
+        {
+            int presentationID = ID.ID;
+            Debug.WriteLine(presentationID);
 
+            Presentation p = LoadPresentationFromXml(presentationID + "");
+
+            try
+            {
+               Slide s = new Slide();
+                s.Title = "Nowy slajd";
+                s.Elements = new List<Element>();
+                if (p.Slides == null)
+                {
+                    p.Slides = new List<Slide>();
+                }
+                int id = p.Slides.Count;
+                Debug.WriteLine(id);
+
+                if (id == null)
+                {
+                    id = 0;
+                }
+                    id++;
+                
+                Debug.WriteLine(id);
+
+                s.Id = id;
+                p?.Slides?.Add(s);
+                this.SavePresentationToXml(p, presentationID + "");
+                return Ok(s);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera."+ ex);
+            }
+           
+        }
 
 
         [HttpPost("/presentation/update/isPublic")]
@@ -232,7 +337,7 @@ namespace EduCraftAPI.Controllers
             Presentation presentationData = new Presentation();
             presentationData.Title = request.Title;
             presentationData.PresentationID = newPresentationId;
-            presentationData.Slides = [];
+            presentationData.Slides = new List<Slide>();
 
             this.SavePresentationToXml(presentationData, "" + newPresentationId);
             try

@@ -16,6 +16,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
     <PackageReference Include="SlideDotNet" Version="0.7.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
@@ -23,6 +24,7 @@
   <ItemGroup>
     <Folder Include="Migrations\" />
     <Folder Include="Presentations\" />
+    <Folder Include="UserImg\" />
   </ItemGroup>
 
 </Project>

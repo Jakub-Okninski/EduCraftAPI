@@ -34,6 +34,8 @@
         [XmlArrayItem("Op")]
         public List<Op>? Ops { get; set; }
         public string? Url { get; set; }
+        public string? PathName { get; set; }
+
         public override string ToString()
         {
             var properties = new List<string>();
