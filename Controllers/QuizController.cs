@@ -1,6 +1,8 @@
 ﻿using EduCraftAPI.Data;
 using EduCraftAPI.Entities.Quiz;
+using EduCraftAPI.Migrations;
 using EduCraftAPI.Models;
+using EduCraftAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +14,12 @@ namespace EduCraftAPI.Controllers
     public class QuizController : Controller
     {
         private readonly DataDbContext _context;
-        public QuizController(DataDbContext context)
+        private readonly IUserContextService _userContextService;
+
+        public QuizController(DataDbContext context, IUserContextService userContextService)
         {
             _context = context;
+            _userContextService = userContextService;
         }
 
         [HttpGet("/MyQuiz")]
@@ -30,6 +35,106 @@ namespace EduCraftAPI.Controllers
         }
 
 
+        [HttpDelete("/remove/quiz/image")]
+        public IActionResult removeImageQuiz([FromQuery] int QuestionID)
+        {
+            var question = _context.Questions
+                .FirstOrDefault(p => p.QuestionID == QuestionID);
+            if (question == null)
+            {
+                return NoContent();
+            }
+            var quiz = _context.Quizzes.FirstOrDefault(q => q.QuizID == question.QuizID);
+         // Skonstruowanie pełnej ścieżki pliku
+        var filePath = Path.Combine("UserDataImage", "User" + quiz.UserID, "Quiz" + quiz.QuizID, question.FileName);
+
+            // Sprawdzanie, czy plik istnieje
+            if (System.IO.File.Exists(filePath))
+            {
+                // Usuwanie pliku
+                System.IO.File.Delete(filePath);
+                question.FileName = null;
+                _context.SaveChanges();
+                // Zwracamy odpowiedź o sukcesie
+                return Ok(new { message = "Plik został usunięty." });
+            }
+            else
+            {
+                return NoContent();
+            }
+
+           
+            return Ok(question);
+        }
+        [HttpPut("/edit/quiz/image")]
+        public IActionResult eduitImageQuiz([FromForm] FileDTO fileDTO)
+        {
+            var question = _context.Questions
+                .FirstOrDefault(p => p.QuestionID == fileDTO.ID);
+            if (question == null)
+            {
+                return NoContent();
+            }
+            var quiz = _context.Quizzes.FirstOrDefault(q => q.QuizID == question.QuizID);
+            // Skonstruowanie pełnej ścieżki pliku
+            if (question.FileName != null)
+            {
+                var filePath = Path.Combine("UserDataImage", "User" + quiz.UserID, "Quiz" + quiz.QuizID, question.FileName);
+
+                // Sprawdzanie, czy plik istnieje
+                if (System.IO.File.Exists(filePath))
+                {
+                    // Usuwanie pliku
+                    System.IO.File.Delete(filePath);
+
+
+                }
+            }
+         
+        
+
+            if (fileDTO.File != null && fileDTO.File.Length != 0)
+            {
+                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserDataImage", "User" + quiz.UserID,"Quiz"+quiz.QuizID);
+            
+
+
+
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(fileDTO.File.FileName);
+                var filePath2 = Path.Combine(uploadsFolder, fileName);
+                using (var stream = new FileStream(filePath2, FileMode.Create))
+                {
+                    fileDTO.File.CopyTo(stream);
+
+                }
+                using (var memoryStream = new MemoryStream())
+                {
+                    // Kopiujemy plik do MemoryStream
+                    fileDTO.File.CopyTo(memoryStream);
+
+                    // Konwertujemy zawartość MemoryStream na tablicę bajtów
+                    byte[] fileBytes = memoryStream.ToArray();
+
+                    // Konwertujemy tablicę bajtów na Base64
+                    string base64String = Convert.ToBase64String(fileBytes);
+
+                    // Tworzymy pełny ciąg Base64 z odpowiednim prefiksem
+                    question.FileContent = $"data:image/jpeg;base64,{base64String}";
+                }
+
+
+
+                question.FileName = fileName;
+                _context.SaveChanges();
+            }
+
+
+
+
+
+            return Ok(question);
+        }
+
         [HttpGet("/quiz")]
         public IActionResult quiz([FromQuery] int QuizID)
         {
@@ -41,6 +146,27 @@ namespace EduCraftAPI.Controllers
             if (quiz == null)
             {
                 return NoContent();
+            }
+            foreach (Question question in quiz.Questions)
+            {
+                if (!string.IsNullOrEmpty(question.FileName))
+                {
+                 
+                    var filePath = Path.Combine("UserDataImage","User"+ _userContextService.GetUserID, "Quiz"+QuizID, question.FileName);
+
+                
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        var fileBytes = System.IO.File.ReadAllBytes(filePath);
+                        string base64String = Convert.ToBase64String(fileBytes);
+                        question.FileContent = $"data:image/jpeg;base64,{base64String}";
+                    }
+                    else
+                    {
+                        question.FileContent = null; 
+                    }
+                }
+             
             }
             return Ok(quiz);
         }
@@ -129,6 +255,16 @@ namespace EduCraftAPI.Controllers
             {
                 return NotFound("Answer not found.");
             }
+            var quiz = _context.Quizzes.FirstOrDefault(q => q.QuizID == question.QuizID);
+
+            var filePath = Path.Combine("UserDataImage", "User" + quiz.UserID, "Quiz" + question.QuizID, question.FileName);
+
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+       
+            }
+
 
             _context.Questions.Remove(question);
             await _context.SaveChangesAsync();
@@ -137,18 +273,73 @@ namespace EduCraftAPI.Controllers
         }
 
         [HttpPost("/question/crerate")]
-        public IActionResult questionGenerate([FromBody] newQuestionDTO questionNew)
+        public IActionResult questionGenerate([FromForm] newQuestionDTO questionNew)
         {
             if (questionNew == null)
             {
                 return BadRequest("Nieprawidłowe dane.");
             }
 
-            var quiz = _context.Quizzes.FirstOrDefault(u => u.QuizID == questionNew.QuizID);
+            var quiz = _context.Quizzes.Include(u=>u.User).FirstOrDefault(u => u.QuizID == questionNew.QuizID);
             if (quiz == null)
             {
                 return NoContent();
             }
+
+         
+
+            Question newQuestion = new Question();
+
+
+            if (questionNew.File != null && questionNew.File.Length != 0)
+            {
+                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserDataImage", "User" + _userContextService.GetUserID);
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+                uploadsFolder = Path.Combine(uploadsFolder, "Quiz" + quiz.QuizID);
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+
+
+
+                // Tworzymy pełny ciąg Base64 z prefiksem
+
+
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(questionNew.File.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    questionNew.File.CopyTo(stream);
+
+                }
+                using (var memoryStream = new MemoryStream())
+                {
+                    // Kopiujemy plik do MemoryStream
+                    questionNew.File.CopyTo(memoryStream);
+
+                    // Konwertujemy zawartość MemoryStream na tablicę bajtów
+                    byte[] fileBytes = memoryStream.ToArray();
+
+                    // Konwertujemy tablicę bajtów na Base64
+                    string base64String = Convert.ToBase64String(fileBytes);
+
+                    // Tworzymy pełny ciąg Base64 z odpowiednim prefiksem
+                    newQuestion.FileContent = $"data:image/jpeg;base64,{base64String}";
+                }
+
+
+
+                newQuestion.FileName = fileName;
+
+            }
+
+
+
 
             try
             {
@@ -157,12 +348,12 @@ namespace EduCraftAPI.Controllers
                 {
                     answerList.Add(new Answer { Name = a.Name, IsCorrect = a.IsCorrect });
                 }
-                var newQuestion = new Question
-                {
-                    QuizID = quiz.QuizID,
-                    Name = questionNew.Name,
-                    Answers = answerList
-                };
+
+
+                newQuestion.QuizID = quiz.QuizID;
+                newQuestion.Name = questionNew.Name;
+                newQuestion.Answers = answerList;
+               
 
                 _context.Questions.Add(newQuestion);
 

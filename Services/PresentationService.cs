@@ -47,7 +47,7 @@ namespace EduCraftAPI.Services
                     FileDownloadName = $"{presentationData.Title}." + type
                 };
             }
-            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserImg", "User" + ID);
+            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserDataImage", "User" + ID, "Presentation"+ presentationData.PresentationID);
 
             foreach (var s in presentationData.Slides)
             {

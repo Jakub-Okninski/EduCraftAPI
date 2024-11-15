@@ -7,7 +7,7 @@
         public string Title { get; set; }
         public User User { get; set; }
         public int UserID { get; set; }
-        public ICollection<Flashcard>? Flashcard { get; set; }
+        public ICollection<Flashcard> Flashcard { get; set; } = new List<Flashcard>();
 
     }
 }

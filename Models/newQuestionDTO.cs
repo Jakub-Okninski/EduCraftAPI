@@ -9,6 +9,7 @@
     {
         public int QuizID { get; set; }
         public string Name { get; set; }
+        public IFormFile? File { get; set; }
         public IEnumerable<newAnswerDTO> Answers { get; set; }
     }
 }

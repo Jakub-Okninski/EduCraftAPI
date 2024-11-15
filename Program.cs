@@ -55,6 +55,9 @@ namespace EduCraftAPI
             builder.Configuration.GetSection("Authentication").Bind(authenticationSetting);
 
             builder.Services.AddScoped<IPresentationService, PresentationService>();
+            builder.Services.AddScoped<IUserContextService, UserContextService>();
+            builder.Services.AddHttpContextAccessor();
+
 
             builder.Services.AddControllers();
 

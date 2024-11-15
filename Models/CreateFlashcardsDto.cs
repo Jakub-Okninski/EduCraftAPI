@@ -9,6 +9,7 @@
 
     public class CreateFlashcardDto
     {
+        public IFormFile? File { get; set; }
         public int FlashcardsId { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }

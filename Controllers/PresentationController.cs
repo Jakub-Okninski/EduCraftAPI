@@ -64,14 +64,19 @@ namespace EduCraftAPI.Controllers
             {
                 return BadRequest("No file uploaded.");
             }
-
-            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserImg", "User" + imgSlideDTO.UserID);
+           
+            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserDataImage", "User" + imgSlideDTO.UserID);
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+             uploadsFolder = Path.Combine(uploadsFolder, "Presentation" + imgSlideDTO.PresentationID);
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
             }
 
-            
+
             var fileName = Guid.NewGuid().ToString() + Path.GetExtension(imgSlideDTO.Image.FileName);
             var filePath = Path.Combine(uploadsFolder, fileName);
             Element e = new Element();

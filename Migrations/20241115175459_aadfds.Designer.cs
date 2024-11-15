@@ -4,6 +4,7 @@ using EduCraftAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduCraftAPI.Migrations
 {
     [DbContext(typeof(DataDbContext))]
-    partial class DataDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241115175459_aadfds")]
+    partial class aadfds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,10 +54,13 @@ namespace EduCraftAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("FileContent")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("FileName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("FlashcardsID")
+                    b.Property<int?>("FlashcardsID")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -251,13 +257,9 @@ namespace EduCraftAPI.Migrations
 
             modelBuilder.Entity("EduCraftAPI.Entities.Flashcards.Flashcard", b =>
                 {
-                    b.HasOne("EduCraftAPI.Entities.Flashcards.Flashcards", "Flashcards")
+                    b.HasOne("EduCraftAPI.Entities.Flashcards.Flashcards", null)
                         .WithMany("Flashcard")
-                        .HasForeignKey("FlashcardsID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Flashcards");
+                        .HasForeignKey("FlashcardsID");
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Flashcards.Flashcards", b =>

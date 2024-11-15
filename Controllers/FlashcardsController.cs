@@ -1,20 +1,28 @@
 ﻿using EduCraftAPI.Data;
 using EduCraftAPI.Entities.Flashcards;
+using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Models;
+using EduCraftAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace EduCraftAPI.Controllers
 {
     [Authorize]
     public class FlashcardsController : Controller
     {
+      
         private readonly DataDbContext _context;
-        public FlashcardsController(DataDbContext context)
+        private readonly IUserContextService _userContextService;
+
+        public FlashcardsController(DataDbContext context, IUserContextService userContextService)
         {
             _context = context;
+            _userContextService = userContextService;
         }
+
         [Authorize(Roles= "User,Admin")]
         [HttpGet("/flashcards")]
         public IActionResult GetFlashcards([FromQuery] int UserID)
@@ -72,19 +80,56 @@ namespace EduCraftAPI.Controllers
         [HttpGet("/flashcard")]
         public IActionResult GetFlashcard([FromQuery] int UserID, int FlashcardID)
         {
+            Debug.WriteLine(" ");
+            Debug.WriteLine(" ok");
+            Debug.WriteLine(" ");
             var flashcards = _context.Flashcards
                  .Include(p => p.Flashcard)
                 .FirstOrDefault(p => p.FlashcardsID == FlashcardID && p.User.UserID == UserID);
-           
+
+            Debug.WriteLine(" ");
+            Debug.WriteLine(" dasdsadas");
+            Debug.WriteLine(" ");
+
             if (flashcards == null)
             {
                 return NoContent();
             }
-            return Ok(flashcards);
+    
+
+            foreach (Flashcard flashcard in flashcards?.Flashcard)
+            {
+                Debug.WriteLine(" ");
+                Debug.WriteLine(" dasaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaadsadas");
+                Debug.WriteLine(" ");
+                if (!string.IsNullOrEmpty(flashcard.FileName))
+                {
+                    Debug.WriteLine(" ");
+                    Debug.WriteLine(" dupaaaa "); Debug.WriteLine(" ");
+                    var filePath = Path.Combine("UserDataImage", "User" + _userContextService.GetUserID, "Flashcard" + flashcards.FlashcardsID, flashcard.FileName);
+                    Debug.WriteLine(filePath);
+
+
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        Debug.WriteLine("exxx...");
+
+                        var fileBytes = System.IO.File.ReadAllBytes(filePath);
+                        string base64String = Convert.ToBase64String(fileBytes);
+                        flashcard.FileContent = $"data:image/jpeg;base64,{base64String}";
+                    }
+                    else
+                    {
+                        flashcard.FileContent = null;
+                    }
+                }
+            }
+
+                return Ok(flashcards);
         }
         [HttpPost("/flashcard/create")]
        
-        public IActionResult CreateFlashcard([FromBody] CreateFlashcardDto createFlashcard)
+        public IActionResult CreateFlashcard([FromForm] CreateFlashcardDto createFlashcard)
         {
             if (createFlashcard == null)
             {
@@ -96,13 +141,46 @@ namespace EduCraftAPI.Controllers
             {
                 return NoContent();
             }
+            Flashcard flashcar = new Flashcard();
 
-            var flashcar = new Flashcard()
+            if (createFlashcard.File != null && createFlashcard.File.Length != 0)
             {
-                Title = createFlashcard.Title,
-                Description = createFlashcard.Description
-            };
-            _context.Flashcard.Add(flashcar);
+                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserDataImage", "User" + _userContextService.GetUserID);
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+                uploadsFolder = Path.Combine(uploadsFolder, "Flashcard" + flashcards.FlashcardsID);
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(createFlashcard.File.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    createFlashcard.File.CopyTo(stream);
+
+                }
+                using (var memoryStream = new MemoryStream())
+                {
+                    createFlashcard.File.CopyTo(memoryStream);
+
+                    byte[] fileBytes = memoryStream.ToArray();
+
+                    string base64String = Convert.ToBase64String(fileBytes);
+
+                    flashcar.FileContent = $"data:image/jpeg;base64,{base64String}";
+                }
+                flashcar.FileName = fileName;
+            }
+                flashcar.Title = createFlashcard.Title;
+                flashcar.Description = createFlashcard.Description;
+            flashcar.Flashcards = flashcards;
+
+
             if (flashcards.Flashcard == null)
             {
                 flashcards.Flashcard = new List<Flashcard>();
@@ -112,6 +190,107 @@ namespace EduCraftAPI.Controllers
             return Ok(flashcar);
         }
 
+
+
+
+        [HttpPut("/edit/flashcard/image")]
+        public IActionResult editImageFlashcard([FromForm] FileDTO fileDTO)
+        {
+            var flashcard = _context.Flashcard
+                .FirstOrDefault(p => p.FlashcardID == fileDTO.ID);
+            if (flashcard == null)
+            {
+                return NoContent();
+            }
+           
+      
+            if (flashcard.FileName != null)
+            {
+                var filePath = Path.Combine("UserDataImage", "User" + _userContextService.GetUserID, "Flashcard" + flashcard.FlashcardsID, flashcard.FileName);
+
+                // Sprawdzanie, czy plik istnieje
+                if (System.IO.File.Exists(filePath))
+                {
+                    // Usuwanie pliku
+                    System.IO.File.Delete(filePath);
+                }
+            }
+
+
+
+            if (fileDTO.File != null && fileDTO.File.Length != 0)
+            {
+                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserDataImage", "User" + _userContextService.GetUserID, "Flashcard" + flashcard.FlashcardsID);
+
+
+
+
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(fileDTO.File.FileName);
+                var filePath2 = Path.Combine(uploadsFolder, fileName);
+                using (var stream = new FileStream(filePath2, FileMode.Create))
+                {
+                    fileDTO.File.CopyTo(stream);
+
+                }
+                using (var memoryStream = new MemoryStream())
+                {
+                    // Kopiujemy plik do MemoryStream
+                    fileDTO.File.CopyTo(memoryStream);
+
+                    // Konwertujemy zawartość MemoryStream na tablicę bajtów
+                    byte[] fileBytes = memoryStream.ToArray();
+
+                    // Konwertujemy tablicę bajtów na Base64
+                    string base64String = Convert.ToBase64String(fileBytes);
+
+                    // Tworzymy pełny ciąg Base64 z odpowiednim prefiksem
+                    flashcard.FileContent = $"data:image/jpeg;base64,{base64String}";
+                }
+
+
+
+                flashcard.FileName = fileName;
+                _context.SaveChanges();
+            }
+
+
+
+
+
+            return Ok(flashcard);
+        }
+
+
+
+        [HttpDelete("/flashcard/remove/image")]
+        public IActionResult removeImageQuiz([FromQuery] int flashcardID)
+        {
+            var flashcard = _context.Flashcard
+                .FirstOrDefault(p => p.FlashcardID == flashcardID);
+            if (flashcard == null || flashcard.FileName==null)
+            {
+                return NoContent();
+            }
+            // Skonstruowanie pełnej ścieżki pliku
+            var filePath = Path.Combine("UserDataImage", "User" + _userContextService.GetUserID, "Flashcard" + flashcard.FlashcardsID, flashcard.FileName);
+
+            // Sprawdzanie, czy plik istnieje
+            if (System.IO.File.Exists(filePath))
+            {
+                // Usuwanie pliku
+                System.IO.File.Delete(filePath);
+                flashcard.FileName = null;
+                _context.SaveChanges();
+                // Zwracamy odpowiedź o sukcesie
+                return Ok(new { message = "Plik został usunięty." });
+            }
+            else
+            {
+                return NoContent();
+            }
+
+
+        }
 
         [HttpDelete("/flashcard/remove")]
         public IActionResult RemoveFlashcards([FromQuery] int flashcardsID)
@@ -123,8 +302,23 @@ namespace EduCraftAPI.Controllers
                 return NoContent();
             }
 
+            if (flashcard.FileName != null)
+            {
+                var filePath = Path.Combine("UserDataImage", "User" + _userContextService.GetUserID, "Flashcard" + flashcard.FlashcardsID, flashcard.FileName);
+
+                // Sprawdzanie, czy plik istnieje
+                if (System.IO.File.Exists(filePath))
+                {
+                    //  pliku
+                    System.IO.File.Delete(filePath);
+
+                }
+            }
+           
+
             _context.Flashcard.Remove(flashcard);
 
+         
             _context.SaveChanges();
 
             return Ok("Flashcard zostało pomyślnie usunięte.");
@@ -165,6 +359,7 @@ namespace EduCraftAPI.Controllers
                 }
             }
             _context.Flashcards.Add(flashcards);
+
             _context.SaveChanges();
             return Ok(flashcards);
         }
