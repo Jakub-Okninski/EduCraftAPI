@@ -1,8 +1,6 @@
 ﻿namespace EduCraftAPI.Entities.Quiz
-
 {
     using EduCraftAPI.Entities.User;
-
     public class Quiz
     {
         public int QuizID { get; set; }

@@ -9,7 +9,6 @@ namespace EduCraftAPI.Controllers
     [Authorize]
     public class AnswerController : Controller
     {
-
         private readonly DataDbContext _context;
         public AnswerController(DataDbContext context)
         {
@@ -19,16 +18,16 @@ namespace EduCraftAPI.Controllers
         [HttpPut("/answer/edit")]
         public async Task<IActionResult> UpdateAnswer([FromBody] Answer newAnswer)
         {
-            var existingAnswer = await _context.Answers.FindAsync(newAnswer.AnswerID);
+            var existingAnswer = _context.Answers.FirstOrDefault(a=>a.AnswerID == newAnswer.AnswerID);
 
             if (existingAnswer == null)
             {
-                return NotFound("Answer not found.");
+                return NotFound();
             }
             existingAnswer.Name = newAnswer.Name; 
             existingAnswer.IsCorrect = newAnswer.IsCorrect; 
 
-            await _context.SaveChangesAsync();
+             _context.SaveChanges();
 
             return Ok(existingAnswer);
         }
@@ -36,15 +35,14 @@ namespace EduCraftAPI.Controllers
         [HttpPost("/question/edit")]
         public async Task<IActionResult> UpdateQuestion([FromBody] QuestionDTO questionDTO)
         {
-
             var question = _context.Questions.FirstOrDefault(q => q.QuestionID == questionDTO.QuestionID);
             if (question == null)
             {
-                return NotFound("Question not found.");
+                return NotFound();
             }
             question.Name = questionDTO.Name;
         
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
 
             return Ok(question);
         }
@@ -52,19 +50,14 @@ namespace EduCraftAPI.Controllers
         [HttpDelete("answer/remove")]
         public async Task<IActionResult> RemoveAnswer([FromQuery]int answerId)
         {
-            // Find the answer by ID
-            var answer = await _context.Answers.FindAsync(answerId);
+            var answer = _context.Answers.FirstOrDefault(a => a.AnswerID == answerId);
 
             if (answer == null)
             {
-                return NotFound("Answer not found.");
+                return NotFound();
             }
-
-            // Remove the answer from the context
             _context.Answers.Remove(answer);
-            await _context.SaveChangesAsync();
-
-            // Return a 204 No Content response
+            _context.SaveChanges();
             return Ok();
         }
 
@@ -74,7 +67,7 @@ namespace EduCraftAPI.Controllers
         {
             if (newAnswer == null || string.IsNullOrWhiteSpace(newAnswer.Name))
             {
-                return BadRequest("Invalid answer data.");
+                return BadRequest();
             }
             var question = _context.Questions.FirstOrDefault(q => q.QuestionID == newAnswer.QuestionID);
 
@@ -82,17 +75,17 @@ namespace EduCraftAPI.Controllers
             {
                 return NotFound("Question not found.");
             }
-            Answer a = new Answer
+            Answer answer = new Answer
             {
                 Name = newAnswer.Name,
                 IsCorrect = newAnswer.IsCorrect,
                 QuestionID=newAnswer.QuestionID
 
             };
-            await _context.Answers.AddAsync(a);
-            await _context.SaveChangesAsync();
+            _context.Answers.Add(answer);
+            _context.SaveChanges();
 
-            return Ok(a);
+            return Ok(answer);
         }
     }
 }

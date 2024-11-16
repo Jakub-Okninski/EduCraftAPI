@@ -31,7 +31,6 @@ namespace EduCraftAPI.Controllers
         [HttpGet("/user")]
         public IActionResult getUser([FromQuery] int userID)
         {
-
             var user = _context.Users
                 .Where(u => u.UserID == userID)
                 .Select(u => new
@@ -40,7 +39,6 @@ namespace EduCraftAPI.Controllers
                     u.LastName,
                     u.Email,
                     u.Role.Name,
-         
                 })
                 .FirstOrDefault(); 
             
@@ -48,7 +46,6 @@ namespace EduCraftAPI.Controllers
             {
                 return NotFound("Brak użytkownika.");
             }
-         
             return Ok(user);
         }
         [Authorize]
@@ -61,13 +58,9 @@ namespace EduCraftAPI.Controllers
             {
                 return NotFound("Brak użytkownika.");
             }
-
             var PresentationCount = _context.Presentation.Count(p => p.UserID == userID);
             var QuizzesCount = _context.Quizzes.Count(p => p.UserID == userID);
             var FlashcardsCount = _context.Flashcards.Count(p => p.UserID == userID);
-
-
-          
 
             return Ok(new
             {

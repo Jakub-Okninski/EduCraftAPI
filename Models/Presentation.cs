@@ -7,7 +7,7 @@
     [XmlRoot("Presentation")]
     public class Presentation
     {
-        public int? PresentationID { get; set; }
+        public int PresentationID { get; set; }
         public string Title { get; set; }
         [XmlArray("Slides")]
         [XmlArrayItem("Slide")]
@@ -33,8 +33,8 @@
         [XmlArray("Ops")]
         [XmlArrayItem("Op")]
         public List<Op>? Ops { get; set; }
-        public string? Url { get; set; }
         public string? PathName { get; set; }
+        public string? Url { get; set; }
 
         public override string ToString()
         {

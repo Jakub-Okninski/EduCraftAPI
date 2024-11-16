@@ -11,7 +11,5 @@ namespace EduCraftAPI.Entities.Quiz
         public string? FileContent { get; set; }
         public ICollection<Answer> Answers { get; set; }
         public int QuizID { get; set; }
-
-
     }
 }

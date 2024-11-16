@@ -1,6 +1,7 @@
 ﻿using EduCraftAPI.Models;
 using GemBox.Presentation;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 
 namespace EduCraftAPI.Services
@@ -20,7 +21,6 @@ namespace EduCraftAPI.Services
 
 
             presentation.SlideSize.Width = 1000;
-
             presentation.SlideSize.Height = 560;
             string data = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
             if (type == "pptx")
@@ -86,7 +86,8 @@ namespace EduCraftAPI.Services
                     }
                     if (e.Type == "image")
                     {
-                       
+                        Debug.WriteLine(e.PathName);
+
                         using (var imageStream = ReadFileAsStream(Path.Combine(uploadsFolder, e.PathName)))
                         {
                         if (imageStream != null)

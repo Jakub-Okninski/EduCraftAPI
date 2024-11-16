@@ -59,7 +59,6 @@ namespace EduCraftAPI.Controllers
                 query = dateSort == "asc" ? query.OrderBy(p => p.CreationDate) : query.OrderByDescending(p => p.CreationDate);
             }
 
-   
             var totalCount = query.Count(); 
       
             var presentations = query.Skip((page - 1) * pageSize).Take(pageSize).Select(p => new
