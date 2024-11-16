@@ -1,4 +1,5 @@
-﻿using EduCraftAPI.Data;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using EduCraftAPI.Data;
 using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Migrations;
 using EduCraftAPI.Models;
@@ -222,14 +223,16 @@ namespace EduCraftAPI.Controllers
            {
                p.QuizID,
                p.Name,
-               Questions = p.Questions.Select(q => new
+               p.UserID,
+               Questions = p.Questions.Select(q => new Question
                {
-                   q.QuestionID,
-                   q.Name,
-                   Answers = q.Answers.Select(a => new
+                   QuestionID = q.QuestionID,
+                   Name = q.Name,
+                   FileName = q.FileName,
+                   Answers = q.Answers.Select(a => new Answer
                    {
-                       a.AnswerID,
-                       a.Name
+                       AnswerID = a.AnswerID,
+                       Name = a.Name
                    }).ToList()
                }).ToList()
            })
@@ -239,7 +242,28 @@ namespace EduCraftAPI.Controllers
             {
                 return NoContent();
             }
+            foreach (var question in quiz.Questions)
+            {
+                if (!string.IsNullOrEmpty(question.FileName))
+                {
 
+                    var filePath = Path.Combine("UserDataImage", "User" + quiz.UserID, "Quiz" + quiz.QuizID, question.FileName);
+
+                  
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        var fileBytes = System.IO.File.ReadAllBytes(filePath);
+                        string base64String = Convert.ToBase64String(fileBytes);
+                        question.FileContent = $"data:image/jpeg;base64,{base64String}";
+                       
+                    }
+                    else
+                    {
+                        question.FileContent = null;
+                    }
+                }
+
+            }
             return Ok(quiz);
         }
 

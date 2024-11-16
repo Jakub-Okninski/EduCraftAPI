@@ -66,11 +66,40 @@ namespace EduCraftAPI.Controllers
         {
             var flashcards = _context.Flashcards
                  .Include(p => p.Flashcard)
+                 .Include(p=>p.User)
                 .FirstOrDefault(p => p.FlashcardsID == FlashcardID);
 
             if (flashcards == null)
             {
                 return NoContent();
+            }
+
+            foreach (Flashcard flashcard in flashcards?.Flashcard)
+            {
+                Debug.WriteLine(" ");
+                Debug.WriteLine(" dasaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaadsadas");
+                Debug.WriteLine(" ");
+                if (!string.IsNullOrEmpty(flashcard.FileName))
+                {
+                    Debug.WriteLine(" ");
+                    Debug.WriteLine(" dupaaaa "); Debug.WriteLine(" ");
+                    var filePath = Path.Combine("UserDataImage", "User" + flashcards.UserID , "Flashcard" + flashcards.FlashcardsID, flashcard.FileName);
+                    Debug.WriteLine(filePath);
+
+
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        Debug.WriteLine("exxx...");
+
+                        var fileBytes = System.IO.File.ReadAllBytes(filePath);
+                        string base64String = Convert.ToBase64String(fileBytes);
+                        flashcard.FileContent = $"data:image/jpeg;base64,{base64String}";
+                    }
+                    else
+                    {
+                        flashcard.FileContent = null;
+                    }
+                }
             }
             return Ok(flashcards);
         }
