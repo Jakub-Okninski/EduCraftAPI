@@ -1,5 +1,7 @@
-﻿using EduCraftAPI.Entities.Flashcards;
+﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using EduCraftAPI.Entities.Flashcards;
 using EduCraftAPI.Entities.Quiz;
+using EduCraftAPI.Migrations;
 using EduCraftAPI.Models;
 using System.Diagnostics;
 using System.Drawing;
@@ -19,6 +21,7 @@ namespace EduCraftAPI.Services
         public Flashcards AddFlashCardsImg(Flashcards flashcards);
         public string SaveFileImgFlashCard(int userID, int FlashCardID, IFormFile file);
         public void RemoveImageFlashCard(int userID, int FlashCardID, string fileName);
+        public string[] getAllFIle(int UserID, string Type, int ItemID);
 
 
     }
@@ -262,7 +265,58 @@ namespace EduCraftAPI.Services
                 System.IO.File.Delete(filePath);
             }
         }
+        public string[] getAllFIle(int UserID, string Type, int ItemID)
+        {
 
+            var filePath = Path.Combine("UserDataImage", "User" + UserID, Type + ItemID);
+
+            if (Directory.Exists(filePath))
+            {
+
+                string[] files = Directory.GetFiles(filePath);
+
+                string[] base64Files = new string[files.Length];
+
+                for (int i = 0; i < files.Length; i++)
+                {
+                    try
+                    {
+                        var fileName = Path.GetFileName(files[i]);
+
+                        string fileNameLower = fileName.ToLower();
+                        if (fileNameLower.EndsWith(".jpg") || fileNameLower.EndsWith(".jpeg"))
+                        {
+                            base64Files[i] = "data:image/jpeg;base64," + Convert.ToBase64String(File.ReadAllBytes(Path.Combine(filePath, fileName)));
+                        }
+                        else if (fileNameLower.EndsWith(".png"))
+                        {
+                            base64Files[i] = "data:image/png;base64," + Convert.ToBase64String(File.ReadAllBytes(Path.Combine(filePath, fileName)));
+                        }
+                        else if (fileNameLower.EndsWith(".gif"))
+                        {
+                            base64Files[i] = "data:image/gif;base64," + Convert.ToBase64String(File.ReadAllBytes(Path.Combine(filePath, fileName)));
+                        }
+                        else
+                        {
+                            base64Files[i] = null;
+                        }
+
+                    }
+                    catch (Exception e)
+                    {
+
+                        base64Files[i] = null;
+                    }
+
+                }
+                return base64Files;
+            }
+            else
+            {
+                return null;
+            }
+
+        }
 
 
     }

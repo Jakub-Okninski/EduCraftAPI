@@ -5,6 +5,7 @@ using EduCraftAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace EduCraftAPI.Controllers
 {
@@ -22,7 +23,7 @@ namespace EduCraftAPI.Controllers
         }
         [Authorize]
         [HttpGet("/file/list")]
-        public IActionResult GetFlashcard()
+        public IActionResult GetList()
         {
             var documents = _context.Flashcards
               .Where(f => f.UserID == _userContextService.GetUserID)
@@ -59,6 +60,20 @@ namespace EduCraftAPI.Controllers
                 return NoContent();
             }
             return Ok(documents);
+        }
+
+        [Authorize]
+        [HttpGet("/file/item")]
+        public IActionResult GetItem([FromQuery] string Type, int ID)
+        {
+            var item = _fileService.getAllFIle((int)_userContextService.GetUserID, Type, ID);
+            if (item != null)
+            {
+                return Ok(item);
+            } 
+            return NoContent();
+
+            
         }
 
     }
