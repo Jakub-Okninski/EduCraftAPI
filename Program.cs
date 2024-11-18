@@ -14,21 +14,20 @@ namespace EduCraftAPI
     {
         public static void Main(string[] args)
         {
+
+
             var builder = WebApplication.CreateBuilder(args);
+            var allowedOrigins = builder.Configuration["AllowedOrigins"];
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowMyOrigin",
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:5175")
+                        builder.WithOrigins(allowedOrigins)
                                .AllowAnyHeader()
                                .AllowAnyMethod();
-                        builder.WithOrigins("http://localhost:5173")
-                              .AllowAnyHeader()
-                              .AllowAnyMethod();
-                        builder.WithOrigins("http://localhost:5174")
-                              .AllowAnyHeader()
-                              .AllowAnyMethod();
+                     
                     });
             });
             // Add services to the container.
