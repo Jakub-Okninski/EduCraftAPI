@@ -1,7 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Office2010.Excel;
 using EduCraftAPI.Entities.Flashcards;
 using EduCraftAPI.Entities.Quiz;
-using EduCraftAPI.Migrations;
 using EduCraftAPI.Models;
 using System.Diagnostics;
 using System.Drawing;

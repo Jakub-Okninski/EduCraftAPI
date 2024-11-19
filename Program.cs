@@ -24,7 +24,7 @@ namespace EduCraftAPI
                 options.AddPolicy("AllowMyOrigin",
                     builder =>
                     {
-                        builder.WithOrigins(allowedOrigins)
+                        builder.WithOrigins(allowedOrigins!)
                                .AllowAnyHeader()
                                .AllowAnyMethod();
                      
@@ -56,6 +56,8 @@ namespace EduCraftAPI
             builder.Services.AddScoped<IFileService, FileService>();
             builder.Services.AddScoped<IPresentationService, PresentationService>();
             builder.Services.AddScoped<IUserContextService, UserContextService>();
+            builder.Services.AddScoped<IDocumentService, DocumentService>();
+
             builder.Services.AddHttpContextAccessor();
 
 

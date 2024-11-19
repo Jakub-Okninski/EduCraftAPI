@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduCraftAPI.Migrations
 {
     [DbContext(typeof(DataDbContext))]
-    [Migration("20241115175459_aadfds")]
-    partial class aadfds
+    [Migration("20241118182047_initialmigrationnew")]
+    partial class initialmigrationnew
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -54,13 +54,10 @@ namespace EduCraftAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FileContent")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("FileName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("FlashcardsID")
+                    b.Property<int>("FlashcardsID")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -257,9 +254,13 @@ namespace EduCraftAPI.Migrations
 
             modelBuilder.Entity("EduCraftAPI.Entities.Flashcards.Flashcard", b =>
                 {
-                    b.HasOne("EduCraftAPI.Entities.Flashcards.Flashcards", null)
+                    b.HasOne("EduCraftAPI.Entities.Flashcards.Flashcards", "Flashcards")
                         .WithMany("Flashcard")
-                        .HasForeignKey("FlashcardsID");
+                        .HasForeignKey("FlashcardsID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Flashcards");
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Flashcards.Flashcards", b =>

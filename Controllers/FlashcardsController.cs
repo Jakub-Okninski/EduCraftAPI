@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.IO;
 
 namespace EduCraftAPI.Controllers
 {
@@ -15,11 +16,14 @@ namespace EduCraftAPI.Controllers
         private readonly DataDbContext _context;
         private readonly IUserContextService _userContextService;
         private readonly IFileService _fileServices;
-        public FlashcardsController(DataDbContext context, IUserContextService userContextService, IFileService fileServices)
+        private readonly IDocumentService _documentService;
+
+        public FlashcardsController(DataDbContext context, IUserContextService userContextService, IFileService fileServices, IDocumentService documentService)
         {
             _context = context;
             _userContextService = userContextService;
             _fileServices = fileServices;
+            _documentService= documentService; 
         }
 
         [Authorize(Roles= "User,Admin")]
@@ -73,6 +77,26 @@ namespace EduCraftAPI.Controllers
                 return NoContent();
             }
             return Ok(_fileServices.AddFlashCardsImg(flashcards));
+        }
+
+
+        [AllowAnonymous]
+        [HttpGet("/flashcards/generate")]
+        public IActionResult GenerateFlashcardsOnID([FromQuery] int FlashcardID)
+        {
+            var flashcards = _context.Flashcards
+                .Include(p => p.Flashcard)
+                .FirstOrDefault(p => p.FlashcardsID == FlashcardID);
+
+            if (flashcards == null)
+            {
+                return NoContent();
+            }
+
+
+            var stream = _documentService.GenerateFlashcards(flashcards);
+            return File(stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "flashcards_" + flashcards.FlashcardsID + ".docx");
+
         }
 
 
