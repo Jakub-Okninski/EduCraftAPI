@@ -15,12 +15,14 @@ namespace EduCraftAPI.Controllers
         private readonly DataDbContext _context;
         private readonly IUserContextService _userContextService;
         private readonly IFileService _fileServices;
+        private readonly IDocumentService _documentService;
 
-        public QuizController(DataDbContext context, IUserContextService userContextService, IFileService fileServices)
+        public QuizController(DataDbContext context, IUserContextService userContextService, IFileService fileServices, IDocumentService documentService)
         {
             _context = context;
             _userContextService = userContextService;
             _fileServices = fileServices;
+            _documentService = documentService;
         }
 
         [HttpGet("/quizs/info")]
@@ -44,6 +46,27 @@ namespace EduCraftAPI.Controllers
                 return NoContent();
             }
             return Ok(quiz);
+        }
+
+
+        [AllowAnonymous]
+        [HttpGet("/quiz/generate")]
+        public IActionResult GenerateQuizOnID([FromQuery] int QuizID)
+        {
+            var quiz = _context.Quizzes
+                .Include(p => p.Questions)
+                .ThenInclude(q => q.Answers)
+                .FirstOrDefault(p => p.QuizID == QuizID);
+
+            if (quiz == null)
+            {
+                return NoContent();
+            }
+
+
+            var stream = _documentService.GenerateQuiz(quiz);
+            return File(stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "quiz_" + quiz.Name + ".docx");
+
         }
 
 

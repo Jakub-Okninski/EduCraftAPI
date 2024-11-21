@@ -95,7 +95,7 @@ namespace EduCraftAPI.Controllers
 
 
             var stream = _documentService.GenerateFlashcards(flashcards);
-            return File(stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "flashcards_" + flashcards.FlashcardsID + ".docx");
+            return File(stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "flashcards_" + flashcards.Title + ".docx");
 
         }
 

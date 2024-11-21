@@ -1,19 +1,18 @@
 ﻿
-using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Spreadsheet;
 using EduCraftAPI.Entities.Flashcards;
-using Microsoft.AspNetCore.Mvc;
+using EduCraftAPI.Entities.Quiz;
+using NPOI.OpenXmlFormats.Wordprocessing;
 using NPOI.Util;
 using NPOI.XWPF.UserModel;
-using System.IO;  // Upewnij się, że masz właściwą przestrzeń nazw
 
-using Microsoft.AspNetCore.Mvc;
-using SkiaSharp;
 
 namespace EduCraftAPI.Services
 {
     public interface IDocumentService
     {
-        byte[] GenerateFlashcards(Flashcards flashcards);
+        public byte[] GenerateFlashcards(Flashcards flashcards);
+        public byte[] GenerateQuiz(Quiz quiz, bool withCorrect = false);
     }
 
     public class DocumentService : IDocumentService
@@ -24,87 +23,219 @@ namespace EduCraftAPI.Services
         {
             _fileService = fileService;
         }
-
-        public byte[] GenerateFlashcards(Flashcards flashcards)
+        public byte[] GenerateQuiz(Quiz quiz, bool withCorrect = false)
         {
-            // Określenie ścieżki do folderu na obrazki
-            var folderPath = Path.Combine("UserDataImage", "User" + flashcards.UserID, "Flashcard" + flashcards.FlashcardsID);
+            var folderPath = Path.Combine("UserDataImage", "User" + quiz.UserID, "Quiz" + quiz.QuizID);
 
-            // Tworzymy nowy dokument Word (DOCX) za pomocą NPOI
             XWPFDocument doc = new XWPFDocument();
+            XWPFParagraph mainParagraph = doc.CreateParagraph();
+            mainParagraph.Alignment = ParagraphAlignment.CENTER;
 
-            // Dodajemy tytuł dokumentu
-            XWPFParagraph titleParagraph = doc.CreateParagraph();
-            titleParagraph.Alignment = ParagraphAlignment.CENTER;
-            XWPFRun titleRun = titleParagraph.CreateRun();
-            titleRun.SetText("Flashcards for User " + flashcards.UserID);
-            titleRun.IsBold = true;
-            titleRun.FontSize = 16;
-
-            // Iterujemy przez każdą fiszkę
-            foreach (var card in flashcards.Flashcard)
+            XWPFRun mainRun = mainParagraph.CreateRun();
+            mainRun.SetText("Quiz: " + quiz.Name);
+            mainRun.IsBold = true;
+            mainRun.FontSize = 16;
+            foreach (var question in quiz.Questions)
             {
-                // Dodajemy nazwę pliku jako nagłówek
-                XWPFParagraph fileNameParagraph = doc.CreateParagraph();
-                fileNameParagraph.Alignment = ParagraphAlignment.LEFT;
-                XWPFRun fileNameRun = fileNameParagraph.CreateRun();
-                fileNameRun.SetText(card.FileName);
-                fileNameRun.IsBold = true;
-                fileNameRun.FontSize = 14;
 
-                // Dodajemy opis fiszki
-                XWPFParagraph descriptionParagraph = doc.CreateParagraph();
-                XWPFRun descriptionRun = descriptionParagraph.CreateRun();
-                descriptionRun.SetText(card.Description);
-                descriptionRun.FontSize = 12;
+                XWPFParagraph questionParagraph = doc.CreateParagraph();
+                questionParagraph.Alignment = ParagraphAlignment.CENTER;
 
-                // Jeżeli karta ma przypisany obraz, dodajemy go do dokumentu
-                if (!string.IsNullOrEmpty(card.FileName))
+                XWPFRun questionRun = questionParagraph.CreateRun();
+                questionRun.SetText("Pytanie: " + question.Name);
+                questionRun.IsBold = true;
+                questionRun.FontSize = 14;
+
+
+                if (!string.IsNullOrEmpty(question.FileName))
                 {
-                    var imagePath = Path.Combine(folderPath, card.FileName);
+                    string imagePath = Path.Combine(folderPath, question.FileName);
 
-                    if (System.IO.File.Exists(imagePath))
+                    if (File.Exists(imagePath))
                     {
-                        // Dodajemy obraz do dokumentu w odpowiednim bloku
                         using (FileStream imageStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
                         {
+                            XWPFParagraph titleParagraphPicture = doc.CreateParagraph();
+                            titleParagraphPicture.Alignment = ParagraphAlignment.CENTER;
+                            XWPFRun titleRunPicture = titleParagraphPicture.CreateRun();
 
-                            // Dodajemy obraz do dokumentu
-                            XWPFRun pictureRun = descriptionParagraph.CreateRun();
-                            pictureRun.AddPicture(imageStream, 6, "logo.png", Units.ToEMU(200), Units.ToEMU(200));
-                            // Strumień imageStream jest automatycznie zamykany po zakończeniu używania
+                            using (var image = System.Drawing.Image.FromStream(imageStream))
+                            {
+                                int imageWidth = image.Width;
+                                int imageHeight = image.Height;
+                                double aspectRatio = (double)imageWidth / imageHeight;
+                                int newWidth = imageWidth;
+                                int newHeight = imageHeight;
+                                if (imageWidth > imageHeight)
+                                {
+                                    newWidth = 2000;
+                                    newHeight = (int)(newWidth / aspectRatio);
+                                }
+                                else
+                                {
+                                    newHeight = 2000;
+                                    newWidth = (int)(newHeight * aspectRatio);
+                                }
+                                imageStream.Seek(0, SeekOrigin.Begin);
+                                titleRunPicture.AddPicture(
+                                    imageStream,
+                                    (int)PictureType.PNG,
+                                    "logo.png",
+                                    Units.ToEMU(newWidth / 10),
+                                    Units.ToEMU(newHeight / 10)
+                                );
+                            }
                         }
-                    }
-                    else
+                    }          
+                }
+                XWPFTable table = doc.CreateTable(1, question.Answers.Count);
+                table.GetRow(0).Height = 1500;
+
+                var ctTable = table.GetCTTbl();
+                var tblProperties = ctTable.AddNewTblPr();
+                tblProperties.jc = new CT_Jc { val = ST_Jc.center };
+
+                var tblLayout1 = table.GetCTTbl().tblPr.AddNewTblLayout();
+                tblLayout1.type = ST_TblLayoutType.@fixed;
+             
+                int colIndex = 0;
+                ulong size = 2300;
+                if(question.Answers.Count > 5)
+                {
+                    size = (ulong)(11500 / question.Answers.Count);
+                }
+                foreach (var answer in question.Answers)
+                {
+                    XWPFTableCell cell = table.GetRow(0).GetCell(colIndex);
+                    table.SetColumnWidth(colIndex, size);
+                    cell.SetVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
+
+                    XWPFParagraph cellParagraph = cell.Paragraphs[0];
+                    cellParagraph.Alignment = ParagraphAlignment.CENTER; 
+
+                    XWPFRun cellRun = cellParagraph.CreateRun();
+                    char letter = (char)('A' + colIndex);
+                    cellRun.SetText("("+letter+ ")  "+answer.Name);
+                    cellRun.FontSize = 12;
+
+                    if (answer.IsCorrect && withCorrect)
                     {
-                        // Jeśli plik obrazu nie istnieje, możemy dodać komunikat (opcjonalnie)
-                        XWPFRun errorRun = descriptionParagraph.CreateRun();
-                        errorRun.SetText("[Image not found: " + card.FileName + "]");
-                        errorRun.FontSize = 12;
+                        cellRun.IsBold = true;
+                        cellRun.SetColor("008000"); 
                     }
+                    colIndex++;
                 }
 
-                // Dodajemy odstęp przed następną kartą
-                XWPFParagraph spacerParagraph = doc.CreateParagraph();
-                spacerParagraph.SpacingAfter = 15; // Dodajemy odstęp przed następną kartą
+               doc.CreateParagraph();
             }
-            // Zapisujemy dokument do pliku
-            using (FileStream fileStream = new FileStream("filePath.docx", FileMode.Create, FileAccess.Write))
-            {
-                doc.Write(fileStream);  // Używamy metody Write do zapisania dokumentu na dysk
-            }
-
-
             using (MemoryStream memoryStream = new MemoryStream())
             {
-                
-                doc.Write(memoryStream);  // Używamy metody Write do zapisania dokumentu na dysk
-                byte[] fileBytes = memoryStream.ToArray(); // Konwertuj do tablicy bajtów
-                return fileBytes; // Zwróć tablicę bajtów
+                doc.Write(memoryStream);
+                return memoryStream.ToArray();
+            };
+        }
+        public byte[] GenerateFlashcards(Flashcards flashcards)
+        {
+            var folderPath = Path.Combine("UserDataImage", "User" + flashcards.UserID, "Flashcard" + flashcards.FlashcardsID);
 
-            }
-           ;
+            XWPFDocument doc = new XWPFDocument();
+            XWPFParagraph mainParagraph = doc.CreateParagraph();
+            mainParagraph.Alignment = ParagraphAlignment.CENTER;
             
+            XWPFRun mainRun = mainParagraph.CreateRun();
+            mainRun.SetText("Fiszki: " + flashcards.Title);
+            mainRun.IsBold = true;
+            mainRun.FontSize = 16;
+            foreach (var card in flashcards.Flashcard)
+            {
+                
+                XWPFTable table = doc.CreateTable(1, 2);
+                var ctTable = table.GetCTTbl();
+                var tblProperties = ctTable.AddNewTblPr();
+                tblProperties.jc = new CT_Jc { val = ST_Jc.center };
+
+
+                var tblLayout1 = table.GetCTTbl().tblPr.AddNewTblLayout();
+                tblLayout1.type = ST_TblLayoutType.@fixed;
+                table.SetColumnWidth(0, 3000);
+                table.SetColumnWidth(1, 3000);
+          
+                XWPFTableCell titleCell = table.GetRow(0).GetCell(0);
+                titleCell.SetVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
+                XWPFParagraph titleParagraph = titleCell.Paragraphs[0];
+                titleParagraph.Alignment = ParagraphAlignment.CENTER;
+                XWPFRun titleRun = titleParagraph.CreateRun();
+                titleRun.SetText(card.Title);
+                titleRun.IsBold = true;
+                titleRun.FontSize = 14;
+
+
+                XWPFTableCell descriptionCell = table.GetRow(0).GetCell(1);
+                table.GetRow(0).Height = 3500;
+                descriptionCell.SetVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
+                XWPFParagraph descriptionParagraph = descriptionCell.Paragraphs[0];
+                descriptionParagraph.Alignment = ParagraphAlignment.CENTER;
+
+                XWPFRun descriptionRun = descriptionParagraph.CreateRun();
+                descriptionRun.SetText(card.Description);
+                descriptionRun.IsBold = true;
+                descriptionRun.FontSize = 14;
+
+                if (!string.IsNullOrEmpty(card.FileName))
+                {
+                    string imagePath = Path.Combine(folderPath, card.FileName);
+
+                    if (File.Exists(imagePath)) 
+                    {
+                        using (FileStream imageStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+                        {
+                            XWPFParagraph titleParagraphPicture = titleCell.AddParagraph();
+
+                            titleParagraphPicture.Alignment = ParagraphAlignment.CENTER;
+                            XWPFRun titleRunPicture = titleParagraphPicture.CreateRun();
+
+
+                            using (var image = System.Drawing.Image.FromStream(imageStream))
+                            {
+                                int imageWidth = image.Width;
+                                int imageHeight = image.Height;
+                                double aspectRatio = (double)imageWidth / imageHeight;
+                                int newWidth = imageWidth;
+                                int newHeight = imageHeight;
+                                if (imageWidth > imageHeight)
+                                {
+                                    newWidth = 1400;
+                                    newHeight = (int)(newWidth / aspectRatio);
+                                }
+                                else
+                                {
+                                    newHeight = 1400;
+                                    newWidth = (int)(newHeight * aspectRatio);
+                                }
+                                imageStream.Seek(0, SeekOrigin.Begin);
+                                titleRunPicture.AddPicture(
+                                    imageStream,
+                                    (int)PictureType.PNG,
+                                    "logo.png",
+                                    Units.ToEMU(newWidth/10),  
+                                    Units.ToEMU(newHeight/10)  
+                                );
+                            }
+                        }
+                    
+                    } else
+                    {
+                        descriptionRun.SetText("[Image not found: " + card.FileName + "]");
+                        descriptionRun.FontSize = 12;
+                        descriptionRun.IsItalic = true; 
+                    }
+                }
+            }
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                doc.Write(memoryStream);  
+                return memoryStream.ToArray(); 
+            };       
         }
     }
 }
