@@ -1,6 +1,4 @@
 ﻿using EduCraftAPI.Data;
-using EduCraftAPI.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduCraftAPI.Entities{
@@ -12,7 +10,6 @@ namespace EduCraftAPI.Entities{
                 serviceProvider.GetRequiredService<
                     DbContextOptions<DataDbContext>>()))
             {
-                
 
                 if (!context.Category.Any())
                 {
@@ -29,8 +26,6 @@ namespace EduCraftAPI.Entities{
                 );
                     context.SaveChanges();
                 }
-
-
 
                 if (!context.Roles.Any())
                 {
@@ -49,22 +44,16 @@ namespace EduCraftAPI.Entities{
 
                 if (!context.Users.Any())
                 {
-
-
-
-                    User.User user = new User.User()
+                    context.Users.Add(new User.User()
                     {
-                        Email = "Admin@edu.pl",
-                        FirstName = "Admin",
-                        LastName = "Admin",
+                        Email = "Jakub@wp.pl",
+                        FirstName = "Jakub",
+                        LastName = "Okniński",
                         RoleID = 1,
-                        Password = "Admin"
-                    };
-                    context.Users.Add(user);
-
+                        Password = "AQAAAAIAAYagAAAAEPutQJKTy3Aemoqw8jepJSnmX9kyn0XzBdABnEavR2y+rSJ8cNYOJGRviAiX4g2MJQ=="
+                    });
                     context.SaveChanges();
                 }
-
             }
         }
     }
