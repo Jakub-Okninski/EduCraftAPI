@@ -221,6 +221,57 @@ namespace EduCraftAPI.Controllers
         }
 
 
+        [HttpDelete("/quiz/delete")]
+        public async Task<IActionResult> RemoveQuiz([FromQuery] int id)
+        {
+            var quiz = _context.Quizzes
+                .Include(q=>q.Questions)
+                .ThenInclude(p=>p.Answers)
+                .FirstOrDefault(p => p.QuizID == id);
+
+            if (quiz == null)
+            {
+                return NotFound();
+            }
+            try
+            {
+                _fileServices.RemoveImgDirectory(quiz.UserID, "Quiz", quiz.QuizID);
+                foreach (var question in quiz.Questions)
+                {
+                    _context.Answers.RemoveRange(question.Answers);
+                }
+                _context.Questions.RemoveRange(quiz.Questions);
+                _context.Quizzes.Remove(quiz);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
+            }
+            _context.SaveChanges();
+            return Ok();
+        }
+
+
+        [HttpPost("/quiz/update/isPublic")]
+        public IActionResult updatePresentation([FromBody] IsPublicDTO isPublicDTO)
+        {
+            var quiz = _context.Quizzes.FirstOrDefault(u => u.QuizID == isPublicDTO.ItemID);
+            if (quiz == null)
+            {
+                return NoContent();
+            }
+            try
+            {
+                quiz.IsPublic = isPublicDTO.IsPublic;
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
+            }
+            return Ok(quiz);
+        }
+
         [HttpDelete("/question/remove")]
         public async Task<IActionResult> Removequestion([FromQuery] int questionID)
         {
@@ -312,6 +363,11 @@ namespace EduCraftAPI.Controllers
             {
                 return BadRequest("Nieprawidłowe dane.");
             }
+            var catrgory = _context.Category.FirstOrDefault(u => u.CategoryID == quizRequest.CategoryID);
+            if (catrgory == null)
+            {
+                return NoContent();
+            }
 
             try
             {
@@ -319,6 +375,8 @@ namespace EduCraftAPI.Controllers
                 {
                     UserID = (int)_userContextService.GetUserID,
                     Name = quizRequest.Title,
+                    IsPublic = quizRequest.IsPublic,
+                    CategoryID = catrgory.CategoryID,
                     Questions = new List<Question>
                     {
                         new Question

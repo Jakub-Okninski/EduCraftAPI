@@ -2,6 +2,7 @@
 using EduCraftAPI.Entities.Flashcards;
 using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Models;
+using NPOI.HPSF;
 using System.Diagnostics;
 using System.Drawing;
 using System.Xml.Serialization;
@@ -21,6 +22,9 @@ namespace EduCraftAPI.Services
         public string SaveFileImgFlashCard(int userID, int FlashCardID, IFormFile file);
         public void RemoveImageFlashCard(int userID, int FlashCardID, string fileName);
         public string[] getAllFIle(int UserID, string Type, int ItemID);
+        public void RemovePresentation(int PresentationID);
+        public void RemoveImgDirectory(int UserID, string Type,int ItemID);
+        public void RemoveImagePresentation(int UserID, int PresentationID, string FileName);
 
 
     }
@@ -316,7 +320,35 @@ namespace EduCraftAPI.Services
             }
 
         }
+        public void RemovePresentation(int PresentationID)
+        {
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), "Presentations", PresentationID + "");
 
+            if (File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+        }
+        public void RemoveImgDirectory(int UserID, string Type, int ItemID)
+        {
+            var directoryPath = Path.Combine("UserDataImage", "User" + UserID, Type + ItemID);
+            if (Directory.Exists(directoryPath))
+            {
+                foreach (var file in Directory.GetFiles(directoryPath))
+                {
+                    System.IO.File.Delete(file);
+                }
 
+                Directory.Delete(directoryPath);
+            }
+        }
+        public void RemoveImagePresentation(int UserID, int PresentationID, string FileName)
+        {
+            var filePath = Path.Combine("UserDataImage", "User" + UserID, "Presentation" + PresentationID, FileName);
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+        }
     }
 }

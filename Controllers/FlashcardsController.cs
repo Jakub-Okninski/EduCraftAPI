@@ -249,33 +249,87 @@ namespace EduCraftAPI.Controllers
         }
 
 
+        [HttpDelete("/flashcards/delete")]
+        public async Task<IActionResult> RemoveFlashcard([FromQuery] int id)
+        {
+            var flashcards = _context.Flashcards
+                .Include(q => q.Flashcard)
+                .FirstOrDefault(p => p.FlashcardsID == id);
+
+            if (flashcards == null)
+            {
+                return NotFound();
+            }
+            try
+            {
+                _fileServices.RemoveImgDirectory(flashcards.UserID, "Flashcard", flashcards.FlashcardsID);    
+                _context.Flashcard.RemoveRange(flashcards.Flashcard);
+                _context.Flashcards.Remove(flashcards);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
+            }
+            _context.SaveChanges();
+            return Ok();
+        }
+
+
+        [HttpPost("/flashcards/update/isPublic")]
+        public IActionResult updatePresentation([FromBody] IsPublicDTO isPublicDTO)
+        {
+            var flashcards = _context.Flashcards.FirstOrDefault(u => u.FlashcardsID == isPublicDTO.ItemID);
+            if (flashcards == null)
+            {
+                return NoContent();
+            }
+            try
+            {
+                flashcards.IsPublic = isPublicDTO.IsPublic;
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
+            }
+            return Ok(flashcards);
+        }
+
+
         [HttpPost("/flashcards/create")]
-        public IActionResult CreateFlashcards([FromBody] CreateFlashcardsDto createFlashcardsDto)
+        public IActionResult CreateFlashcards([FromBody] TitleUserDTO createFlashcardsDto)
         {
             if (createFlashcardsDto == null)
             {
                 return BadRequest("Nieprawidłowe dane.");
             }
-    
+
+            var catrgory = _context.Category.FirstOrDefault(u => u.CategoryID == createFlashcardsDto.CategoryID);
+            if (catrgory == null)
+            {
+                return NoContent();
+            }
             var flashcards = new Flashcards
             {
+                IsPublic = createFlashcardsDto.IsPublic,
+                CategoryID= catrgory.CategoryID,
                 UserID = (int)_userContextService.GetUserID,
                 Title = createFlashcardsDto.Title,
                 Flashcard = new List<Flashcard>()
             };
 
-            if (createFlashcardsDto?.Flashcards != null)
-            {
-                foreach (var cardDto in createFlashcardsDto.Flashcards)
-                {
-                    var flashcard = new Flashcard
-                    {
-                        Title = cardDto.Title,
-                        Description = cardDto.Description
-                    };
-                    flashcards.Flashcard.Add(flashcard);
-                }
-            }
+            //if (createFlashcardsDto?.Flashcards != null)
+            //{
+            //    foreach (var cardDto in createFlashcardsDto.Flashcards)
+            //    {
+            //        var flashcard = new Flashcard
+            //        {
+            //            Title = cardDto.Title,
+            //            Description = cardDto.Description
+            //        };
+            //        flashcards.Flashcard.Add(flashcard);
+            //    }
+            //}
             _context.Flashcards.Add(flashcards);
             _context.SaveChanges();
             return Ok(flashcards);

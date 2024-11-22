@@ -6,6 +6,7 @@ using EduCraftAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using EduCraftAPI.Services;
 using SixLabors.ImageSharp;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduCraftAPI.Controllers
 {
@@ -40,7 +41,7 @@ namespace EduCraftAPI.Controllers
                 return NoContent();
             }
 
-            Slide slide = presentation.Slides?.FirstOrDefault(s => s.Id == imgSlideDTO.SlideID);
+            var slide = presentation.Slides?.FirstOrDefault(s => s.Id == imgSlideDTO.SlideID);
             if (slide == null)
             {
                 return NoContent();
@@ -59,7 +60,6 @@ namespace EduCraftAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
-
             }
 
             if (slide.Elements == null)
@@ -86,7 +86,33 @@ namespace EduCraftAPI.Controllers
 
             return Ok(new { Data = element, SlideId = slide.Id });
         }
-        
+
+
+
+        [HttpDelete("/presentation/delete")]
+        public async Task<IActionResult> RemovePresentation([FromQuery] int id)
+        {
+            var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == id);
+
+            if (presentation == null)
+            {
+                return NotFound();
+            }
+            try
+            {
+                _fileServices.RemovePresentation(presentation.PresentationsID);
+                _fileServices.RemoveImgDirectory(presentation.UserID, "Presentation", presentation.PresentationsID);
+                _context.Presentation.Remove(presentation);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
+            }
+            _context.SaveChanges();
+            return Ok();
+        }
+
+
         [AllowAnonymous]
         [HttpGet("/presentation")]
         public IActionResult GetPresentation([FromQuery] int presentationId)
@@ -115,40 +141,184 @@ namespace EduCraftAPI.Controllers
             return Ok(presentation);
         }
 
+
+
+        [HttpDelete("/presentation/remove/slide")]
+        public IActionResult RemoveSlidePresentationData([FromQuery] int PresentationID, int SlideID)
+        {
+            try
+            {
+                var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == PresentationID);
+                if (presentation == null)
+                {
+                    return NoContent();
+                }
+                var presentationData = _fileServices.LoadPresentationFromXml(presentation.PresentationsID);
+                if (presentationData == null)
+                {
+                    return NoContent();
+                }
+                var slide = presentationData.Slides?.FirstOrDefault(s => s.Id == SlideID);
+                if (slide == null)
+                {
+                    return NoContent();
+                }
+                foreach(var element in slide?.Elements)
+                {
+                    if (element.Type == "image")
+                    {
+                        _fileServices.RemoveImagePresentation(presentation.UserID, presentation.PresentationsID, element.PathName);
+                    }
+                }
+
+                presentationData.Slides.Remove(slide);
+                _fileServices.SavePresentationToXml(presentationData, PresentationID);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
+
+            }
+        }
+
+        [HttpDelete("/presentation/remove/element")]
+        public IActionResult RemoveElementPresentationData([FromQuery] int PresentationID, int SlideID, int ElementID)
+        {
+            try
+            {
+                var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == PresentationID);
+                if (presentation == null)
+                {
+                    return NoContent();
+                }
+                var presentationData = _fileServices.LoadPresentationFromXml(presentation.PresentationsID);
+                if (presentationData == null)
+                {
+                    return NoContent();
+                }
+                var slide = presentationData.Slides?.FirstOrDefault(s => s.Id == SlideID);
+                if (slide == null)
+                {
+                    return NoContent();
+                }
+                var element = slide.Elements?.FirstOrDefault(e => e.Id == ElementID);
+                if (element == null)
+                {
+                    return NoContent();
+                }
+
+                if (element.Type == "image")
+                {
+                    _fileServices.RemoveImagePresentation(presentation.UserID, presentation.PresentationsID, element.PathName);
+                }
+
+                slide.Elements.Remove(element);
+                _fileServices.SavePresentationToXml(presentationData, PresentationID);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
+
+            }
+        }
+
+        [HttpPost("/presentation/add/text")]
+        public IActionResult AddTextPresentationData([FromBody] TextSlideDTO textSlideDTO)
+        {
+            try
+            {
+                var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == textSlideDTO.PresentationID);
+                if (presentation == null)
+                {
+                    return NoContent();
+                }
+                var presentationData = _fileServices.LoadPresentationFromXml(presentation.PresentationsID);
+                if (presentationData == null)
+                {
+                    return NoContent();
+                }
+                var slide = presentationData.Slides?.FirstOrDefault(s => s.Id == textSlideDTO.SlideID);
+                if (slide == null)
+                {
+                    return NoContent();
+                }
+
+                if (slide.Elements == null)
+                {
+                    slide.Elements = new List<Element>();
+                }
+                int newID = slide.Elements.Count + 1;
+                Element element = new Element();
+                element.Id = newID;
+                element.Type = "text";
+                element.Position = new Position()
+                {
+                    Left = textSlideDTO.PositionX,
+                    Top = textSlideDTO.PositionY,
+                };
+                element.Size = new EduCraftAPI.Models.Size()
+                {
+                    Width = textSlideDTO.Width,
+                    Height = textSlideDTO.Height,
+                };
+
+                element.Ops = new List<Op> { 
+                    new Op(){
+                    Insert= "Nowy Element \n "
+                }};
+
+                slide.Elements.Add(element);
+                _fileServices.SavePresentationToXml(presentationData, textSlideDTO.PresentationID);
+
+                return Ok(element);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
+
+            }    
+         }
+
         [AllowAnonymous]
         [HttpGet("/generate/presentation")]
         public IActionResult generatePresentation([FromQuery] int presentationId, string type)
         {
-            var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == presentationId);
-            if (presentation == null)
+            try
             {
-                return NoContent();
+                var presentation = _context.Presentation.FirstOrDefault(p => p.PresentationsID == presentationId);
+                if (presentation == null)
+                {
+                    return NoContent();
+                }
+                Presentation presentationData = _fileServices.LoadPresentationFromXml(presentation.PresentationsID);
+                if (presentationData == null)
+                {
+                    return NoContent();
+                }
+                return _presentationServices.GeneratePPTX(presentationData, presentation.UserID, type);
+
             }
-            Presentation presentationData = _fileServices.LoadPresentationFromXml(presentation.PresentationsID);
-            if (presentationData == null)
+            catch (Exception ex)
             {
-                return NoContent();
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
             }
-            return _presentationServices.GeneratePPTX(presentationData, presentation.UserID, type);
         }
 
         [HttpGet("/presentations")]
         public IActionResult GetPresentationsByUser()
         {
             var presentations = _context.Presentation
-                 .Where(p => p.User.UserID == _userContextService.GetUserID)
-                 .Select(p => new PresentationDTO
-                 {
-                     PresentationID = p.PresentationsID,
-                     Title = p.Title,
-                 });
-
+                 .Where(p => p.User.UserID == _userContextService.GetUserID);
+           
             if (!presentations.Any())
             {
                 return NoContent();
             }
             return Ok(presentations.ToList());
         }
+
 
         [HttpPost("/presentation/add/slide")]
         public IActionResult sldieAddPresentation([FromBody] DTOID ID)
@@ -161,7 +331,6 @@ namespace EduCraftAPI.Controllers
             try
             {
                 Slide slide = new Slide();
-                slide.Title = "Nowy slajd";
                 slide.Elements = new List<Element>();
                 if (presentation.Slides == null)
                 {
@@ -171,6 +340,7 @@ namespace EduCraftAPI.Controllers
 
                 newID++;
                 slide.Id = newID;
+                slide.Title = "Slajd " + newID;
                 presentation.Slides.Add(slide);
                 _fileServices.SavePresentationToXml(presentation, ID.ID);
                 return Ok(slide);

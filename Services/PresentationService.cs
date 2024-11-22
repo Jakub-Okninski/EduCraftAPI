@@ -1,8 +1,5 @@
-﻿using EduCraftAPI.Models;
-using GemBox.Presentation;
+﻿using GemBox.Presentation;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
-
 
 namespace EduCraftAPI.Services
 {
@@ -17,43 +14,29 @@ namespace EduCraftAPI.Services
 
         public FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData, int ID , string type = "pptx")
         {
+            if ((type != "pptx" && type != "pdf")|| presentationData == null || presentationData.Slides ==null|| presentationData.Slides.Count == 0)
+            {
+                using (MemoryStream emptyStream = new MemoryStream())
+                {
+                    return new FileStreamResult(emptyStream, type == "pptx" ? "application/vnd.openxmlformats-officedocument.presentationml.presentation" : "application/pdf")
+                    {
+                        FileDownloadName = $"{presentationData?.Title ?? "Untitled"}.{type}"
+                    };
+                }
+            }
+
             var presentation = new PresentationDocument();
-
-
             presentation.SlideSize.Width = 1000;
             presentation.SlideSize.Height = 560;
-            string data = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-            if (type == "pptx")
-            {
-                data = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-            }
-            if (type == "pdf")
-            {
-                data = "application/pdf";
-            }
-            if (presentationData== null)
-            {
-
-                byte[] fileBytes2 = [];
-                return new FileContentResult(fileBytes2, data)
-                {
-                    FileDownloadName = $"{presentationData.Title}."+ type
-                };
-            }
-            if (!presentationData.Slides.Any()){
-                byte[] fileBytes2 = [];
-                return new FileContentResult(fileBytes2, data)
-                {
-                    FileDownloadName = $"{presentationData.Title}." + type
-                };
-            }
+         
+          
             string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserDataImage", "User" + ID, "Presentation"+ presentationData.PresentationID);
 
             foreach (var s in presentationData.Slides)
             {
                 var slide = presentation.Slides.AddNew(SlideLayoutType.Custom);
 
-                if (!s.Elements.Any())
+                if (s.Elements == null || s.Elements.Count==0)
                 {
                     continue;
                 }
@@ -61,17 +44,16 @@ namespace EduCraftAPI.Services
                 {
                     if (e.Type == "text")
                     {
-                        if (!e.Ops.Any())
+                        if (e.Ops == null || e.Ops.Count == 0)
                         {
                             continue;
                         }
                         var textShape = slide.Content.AddTextBox(ShapeGeometryType.Rectangle, (double)e.Position.Left, (double)e.Position.Top, (double)e.Size.Width, (double)e.Size.Height);
-                        short i = 0;
-                      
+                        short i = 0;   
                         foreach (var o in e.Ops)
                         {
                             var paragraph = textShape.AddParagraph();
-                            var run = paragraph.AddRun(o.Insert);
+                            var run = paragraph.AddRun(""+o.Insert);
                             if (i+1 < e.Ops.Count - 1)
                             {
                                 run.Text = o.Insert.TrimEnd('\n');
@@ -84,80 +66,49 @@ namespace EduCraftAPI.Services
                         }
                    
                     }
-                    if (e.Type == "image")
+                    else if (e.Type == "image")
                     {
-                        Debug.WriteLine(e.PathName);
-
-                        using (var imageStream = ReadFileAsStream(Path.Combine(uploadsFolder, e.PathName)))
+                        if(e.PathName == null)
                         {
-                        if (imageStream != null)
+                            continue;
+                        }
+                       var localPath =  Path.Combine(uploadsFolder, e.PathName);
+                        if (Path.Exists(localPath))
                         {
-                            slide.Content.AddPicture(PictureContentType.Unknown, imageStream, (double)e.Position.Left, (double)e.Position.Top, (double)e.Size.Width, (double)e.Size.Height);
-                        } 
+                            using (var imageStream = ReadFileAsStream(localPath))
+                            {
+                                if (imageStream != null)
+                                {
+                                    slide.Content.AddPicture(PictureContentType.Unknown, imageStream, (double)e.Position.Left, (double)e.Position.Top, (double)e.Size.Width, (double)e.Size.Height);
+                                }
+                            }
                         }
                     }
                 }   
             }
-            if (type == "pptx")
+
+            var stream = new MemoryStream();
+            presentation.Save(stream, type == "pptx" ?  SaveOptions.Pptx : SaveOptions.Pdf);
+            stream.Position = 0;
+
+            return new FileStreamResult(stream, type == "pptx" ? "application/vnd.openxmlformats-officedocument.presentationml.presentation" : "application/pdf")
             {
-                var stream = new MemoryStream();
-                presentation.Save(stream, SaveOptions.Pptx);
-
-                stream.Position = 0;
-
-                return new FileStreamResult(stream, "application/vnd.openxmlformats-officedocument.presentationml.presentation")
-                {
-                    FileDownloadName = $"{presentationData.Title}.pptx"
-                };
-            }
-            if (type == "pdf")
-            {
-                var stream = new MemoryStream();
-                presentation.Save(stream, SaveOptions.Pdf);
-
-                stream.Position = 0;
-
-                return new FileStreamResult(stream, "application/pdf")
-                {
-                    FileDownloadName = $"{presentationData.Title}.pdf"
-                };
-            }
-
-            byte[] fileBytes = [];
-            return new FileContentResult(fileBytes, data)
-            {
-                FileDownloadName = $"{presentationData.Title}."+type
-            };
+                FileDownloadName = $"{presentationData.Title}.pptx"
+            };    
         }
 
 
         private Stream ConvertBase64ToStream(string base64String)
         {
-            // Usunięcie prefiksu, jeśli występuje
-            var base64Data = base64String.Replace("data:image/png;base64,", "");
-
-            // Konwersja Base64 na bajty
-            byte[] imageBytes = Convert.FromBase64String(base64Data);
-
-            // Utworzenie strumienia z bajtów
-            var imageStream = new MemoryStream(imageBytes);
-
-            // Zresetuj pozycję strumienia do początku
+            var imageStream = new MemoryStream(Convert.FromBase64String(base64String.Replace("data:image/png;base64,", "")));
             imageStream.Position = 0;
-
             return imageStream;
         }
         public Stream ReadFileAsStream(string filePath)
         {
             try
             {
-                // Otwiera plik do odczytu i zwraca go jako Stream
                 return new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            }
-            catch (FileNotFoundException ex)
-            {
-                Console.WriteLine($"Plik nie został znaleziony: {ex.Message}");
-                return null;
             }
             catch (Exception ex)
             {
@@ -165,6 +116,5 @@ namespace EduCraftAPI.Services
                 return null;
             }
         }
-
     }
 }

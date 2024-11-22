@@ -27,9 +27,9 @@
     {
         [XmlAttribute("Id")]
         public int Id { get; set; }
-        public string? Type { get; set; }
-        public Position? Position { get; set; } = new Position();
-        public Size? Size { get; set; } = new Size();
+        public string Type { get; set; }
+        public Position Position { get; set; } = new Position();
+        public Size Size { get; set; } = new Size();
         [XmlArray("Ops")]
         [XmlArrayItem("Op")]
         public List<Op>? Ops { get; set; }
@@ -57,13 +57,13 @@
 
     public class Position
     {
-        public float? Top { get; set; } = null;
-        public float? Left { get; set; } = null;
+        public float Top { get; set; } = 0;
+        public float Left { get; set; } = 0;
     }
     public class Size
     {
-        public float? Width { get; set; } = null;
-        public float? Height { get; set; } = null;
+        public float Width { get; set; } = 0;
+        public float Height { get; set; } = 0;
     }
     public class Op
     {
