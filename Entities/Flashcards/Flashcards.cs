@@ -7,6 +7,7 @@
     {
         public int FlashcardsID { get; set; }
         public string Title { get; set; }
+        public DateTime CreationDate { get; set; }
         public User User { get; set; }
         public int UserID { get; set; }
         public Boolean IsPublic { get; set; }

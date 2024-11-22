@@ -7,6 +7,7 @@
     {
         public int QuizID { get; set; }
         public string Name { get; set; }
+        public DateTime CreationDate { get; set; }
         public User User { get; set; }
         public int UserID { get; set; }
         public Boolean IsPublic { get; set; }

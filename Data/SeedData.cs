@@ -1,4 +1,6 @@
 ﻿using EduCraftAPI.Data;
+using EduCraftAPI.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduCraftAPI.Entities{
@@ -44,6 +46,25 @@ namespace EduCraftAPI.Entities{
                 );
                     context.SaveChanges();
                 }
+
+                if (!context.Users.Any())
+                {
+
+
+
+                    User.User user = new User.User()
+                    {
+                        Email = "Admin@edu.pl",
+                        FirstName = "Admin",
+                        LastName = "Admin",
+                        RoleID = 1,
+                        Password = "Admin"
+                    };
+                    context.Users.Add(user);
+
+                    context.SaveChanges();
+                }
+
             }
         }
     }

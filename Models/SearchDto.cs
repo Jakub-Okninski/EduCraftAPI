@@ -2,9 +2,11 @@
 {
     public class SearchDto
     {
-        public string? Phrase { get; set; }
-        public DateTime? StartDate { get; set; } 
-        public DateTime? EndDate { get; set; }   
-        public int? Category { get; set; }
+        public int ItemID { get; set; }
+        public string Title { get; set; }
+        public string FirstName { get; set; }
+        public string CategoryName { get; set; }
+        public DateTime CreationDate { get; set; }
+        public string Type { get; set; }
     }
 }

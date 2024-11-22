@@ -313,6 +313,7 @@ namespace EduCraftAPI.Controllers
             {
                 IsPublic = createFlashcardsDto.IsPublic,
                 CategoryID= catrgory.CategoryID,
+                CreationDate = DateTime.Now,
                 UserID = (int)_userContextService.GetUserID,
                 Title = createFlashcardsDto.Title,
                 Flashcard = new List<Flashcard>()

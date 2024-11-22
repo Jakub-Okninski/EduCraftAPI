@@ -377,6 +377,7 @@ namespace EduCraftAPI.Controllers
                     Name = quizRequest.Title,
                     IsPublic = quizRequest.IsPublic,
                     CategoryID = catrgory.CategoryID,
+                    CreationDate = DateTime.Now,
                     Questions = new List<Question>
                     {
                         new Question

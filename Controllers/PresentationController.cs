@@ -61,13 +61,24 @@ namespace EduCraftAPI.Controllers
             {
                 return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
             }
-
+            int newID = 0;
             if (slide.Elements == null)
             {
                 slide.Elements = new List<Element>();
+                newID = slide.Elements.Count;
             }
-            int newID = slide.Elements.Count + 1;
-            element.Id = newID;
+            else
+            {
+                foreach(var el in slide.Elements)
+                {
+                    if (el.Id >= newID)
+                    {
+                        newID = el.Id;
+                    }
+                }
+            }
+           
+            element.Id = newID+1;
             element.Type = "image";
 
             element.Position = new Position
@@ -245,13 +256,25 @@ namespace EduCraftAPI.Controllers
                     return NoContent();
                 }
 
+                Element element = new Element();
+                int newID = 0;
                 if (slide.Elements == null)
                 {
                     slide.Elements = new List<Element>();
+                    newID = slide.Elements.Count;
                 }
-                int newID = slide.Elements.Count + 1;
-                Element element = new Element();
-                element.Id = newID;
+                else
+                {
+                    foreach (var el in slide.Elements)
+                    {
+                        if (el.Id >= newID)
+                        {
+                            newID = el.Id;
+                        }
+                    }
+                }
+
+                element.Id = newID+1;
                 element.Type = "text";
                 element.Position = new Position()
                 {
@@ -332,14 +355,24 @@ namespace EduCraftAPI.Controllers
             {
                 Slide slide = new Slide();
                 slide.Elements = new List<Element>();
+
+                int newID = 0;     
                 if (presentation.Slides == null)
                 {
                     presentation.Slides = new List<Slide>();
+                    newID = presentation.Slides.Count;
                 }
-                int newID = presentation.Slides.Count;
-
-                newID++;
-                slide.Id = newID;
+                else
+                {
+                    foreach (var sl in presentation.Slides)
+                    {
+                        if (sl.Id >= newID)
+                        {
+                            newID = sl.Id;
+                        }
+                    }
+                }
+                slide.Id = newID + 1;
                 slide.Title = "Slajd " + newID;
                 presentation.Slides.Add(slide);
                 _fileServices.SavePresentationToXml(presentation, ID.ID);
