@@ -1,10 +1,12 @@
-﻿using EduCraftAPI.Data;
+﻿using DocumentFormat.OpenXml.Office.SpreadSheetML.Y2023.MsForms;
+using EduCraftAPI.Data;
 using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Models;
 using EduCraftAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NPOI.XSSF.Streaming.Values;
 using Question = EduCraftAPI.Entities.Quiz.Question;
 
 namespace EduCraftAPI.Controllers
@@ -53,6 +55,7 @@ namespace EduCraftAPI.Controllers
         [HttpGet("/quiz/generate")]
         public IActionResult GenerateQuizOnID([FromQuery] int QuizID)
         {
+            Boolean withCorrect = false;
             var quiz = _context.Quizzes
                 .Include(p => p.Questions)
                 .ThenInclude(q => q.Answers)
@@ -63,8 +66,27 @@ namespace EduCraftAPI.Controllers
                 return NoContent();
             }
 
+            if (!withCorrect)
+            {
+                if (quiz.RandomQuestion)
+                {
+                    Random random = new Random();
+                    foreach (var question in quiz.Questions)
+                    {
+                        question.Answers = question.Answers.OrderBy(q => random.Next()).ToList();
+                    }
+                    quiz.Questions = quiz.Questions.OrderBy(q => random.Next()).ToList();
+                }
 
-            var stream = _documentService.GenerateQuiz(quiz);
+                if (quiz.Questions.Count >= quiz.CountQuestions)
+                {
+                    // Remove excess questions
+                    quiz.Questions = quiz.Questions.Take(quiz.CountQuestions).ToList();
+                }
+            }
+            
+
+            var stream = _documentService.GenerateQuiz(quiz, withCorrect);
             return File(stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "quiz_" + quiz.Name + ".docx");
 
         }
@@ -198,6 +220,8 @@ namespace EduCraftAPI.Controllers
                QuizID = p.QuizID,
                Name = p.Name,
                UserID = p.UserID,
+               RandomQuestion = p.RandomQuestion,
+               CountQuestions = p.CountQuestions,
                Questions = p.Questions.Select(q => new Question
                {
                    QuestionID = q.QuestionID,
@@ -215,6 +239,21 @@ namespace EduCraftAPI.Controllers
             if (quiz == null)
             {
                 return NoContent();
+            }
+            if (quiz.RandomQuestion)
+            {
+                Random random = new Random();
+                foreach (var question in quiz.Questions)
+                {
+                    question.Answers = question.Answers.OrderBy(q => random.Next()).ToList();
+                }
+                quiz.Questions = quiz.Questions.OrderBy(q => random.Next()).ToList();
+            }
+
+            if (quiz.Questions.Count >= quiz.CountQuestions)
+            {
+                // Remove excess questions
+                quiz.Questions = quiz.Questions.Take(quiz.CountQuestions).ToList();
             }
 
             return Ok(_fileServices.AddQuestionImg(quiz));
@@ -271,10 +310,63 @@ namespace EduCraftAPI.Controllers
             }
             return Ok(quiz);
         }
+        [HttpPost("/quiz/update/random")]
+        public IActionResult updateRandom([FromBody] RandomDTO randomDTO)
+        {
+            var quiz = _context.Quizzes.FirstOrDefault(u => u.QuizID == randomDTO.QuizID);
+            if (quiz == null)
+            {
+                return NoContent();
+            }
+            try
+            {
+                quiz.RandomQuestion = randomDTO.RandomQuestion;
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
+            }
+            return Ok(quiz);
+        }
+
+        [HttpPost("/quiz/update/countQuestion")]
+        public IActionResult updateCountQuestion([FromBody] CountQuestionDTO countQuestionDTO)
+        {
+            var quiz = _context.Quizzes.Include(q=>q.Questions).FirstOrDefault(u => u.QuizID == countQuestionDTO.QuizID);
+            if (quiz == null)
+            {
+                return NoContent();
+            }
+            if (countQuestionDTO.CountQuestions < 0)
+            {
+                return StatusCode(304, "Błedna liczba pytań.");
+            }
+            try
+            {
+                if (quiz.Questions.Count > countQuestionDTO.CountQuestions)
+                {
+                    quiz.CountQuestions = countQuestionDTO.CountQuestions;
+                    _context.SaveChanges();
+                }
+                else
+                {
+                    return StatusCode(304, "Błedna liczba pytań.");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
+            }
+            return Ok(countQuestionDTO.CountQuestions);
+        }
+
 
         [HttpDelete("/question/remove")]
         public async Task<IActionResult> Removequestion([FromQuery] int questionID)
         {
+
             var question = await _context.Questions
                 .Where(q => q.QuestionID == questionID)
                 .FirstOrDefaultAsync();
@@ -284,6 +376,14 @@ namespace EduCraftAPI.Controllers
                 return NotFound("Answer not found.");
             }
 
+            var quiz = _context.Quizzes
+                .Include(q => q.Questions)
+                .FirstOrDefault(q => q.QuizID == question.QuizID);
+
+            if (quiz == null)
+            {
+                return NotFound("Answer not found.");
+            }
             try
             {
                 if (question.FileName != null)
@@ -295,8 +395,12 @@ namespace EduCraftAPI.Controllers
                 return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
             }
 
+            if (quiz.CountQuestions > quiz.Questions.Count)
+            {
+                quiz.CountQuestions=quiz.Questions.Count;
+            }
             _context.Questions.Remove(question);
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
             return Ok();
         }
 
@@ -346,7 +450,7 @@ namespace EduCraftAPI.Controllers
                 newQuestion.QuizID = quiz.QuizID;
                 newQuestion.Name = questionNew.Name;
                 newQuestion.Answers = answerList;
-               
+                quiz.CountQuestions = quiz.CountQuestions+1;
                 _context.Questions.Add(newQuestion);
                 _context.SaveChanges();
                 return Ok(newQuestion);
@@ -390,7 +494,9 @@ namespace EduCraftAPI.Controllers
                                 new Answer { Name = "Madrid", IsCorrect = false }
                             }
                         }
-                    }
+                    },
+                    CountQuestions = 1
+                
                 };
 
                 _context.Quizzes.Add(quiz);

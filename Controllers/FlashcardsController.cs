@@ -26,7 +26,7 @@ namespace EduCraftAPI.Controllers
             _documentService= documentService; 
         }
 
-        [Authorize(Roles= "User,Admin")]
+
         [HttpGet("/flashcards")]
         public IActionResult GetFlashcards()
         {
