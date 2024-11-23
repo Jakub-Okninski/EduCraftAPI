@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NPOI.XSSF.Streaming.Values;
+using System.Diagnostics;
 using Question = EduCraftAPI.Entities.Quiz.Question;
 
 namespace EduCraftAPI.Controllers
@@ -53,9 +54,8 @@ namespace EduCraftAPI.Controllers
 
         [AllowAnonymous]
         [HttpGet("/quiz/generate")]
-        public IActionResult GenerateQuizOnID([FromQuery] int QuizID)
+        public IActionResult GenerateQuizOnID([FromQuery] int QuizID, [FromQuery] bool withCorrect = false)
         {
-            Boolean withCorrect = false;
             var quiz = _context.Quizzes
                 .Include(p => p.Questions)
                 .ThenInclude(q => q.Answers)
@@ -344,7 +344,7 @@ namespace EduCraftAPI.Controllers
             }
             try
             {
-                if (quiz.Questions.Count > countQuestionDTO.CountQuestions)
+                if (quiz.Questions.Count >= countQuestionDTO.CountQuestions)
                 {
                     quiz.CountQuestions = countQuestionDTO.CountQuestions;
                     _context.SaveChanges();
@@ -394,10 +394,15 @@ namespace EduCraftAPI.Controllers
             catch (Exception ex) {
                 return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
             }
+            Debug.WriteLine("...");
+            Debug.WriteLine(quiz.CountQuestions); 
+            Debug.WriteLine(quiz.Questions.Count);
 
-            if (quiz.CountQuestions > quiz.Questions.Count)
+            Debug.WriteLine("...");
+
+            if (quiz.CountQuestions > quiz.Questions.Count-1)
             {
-                quiz.CountQuestions=quiz.Questions.Count;
+                quiz.CountQuestions=quiz.Questions.Count-1;
             }
             _context.Questions.Remove(question);
             _context.SaveChanges();
@@ -414,6 +419,7 @@ namespace EduCraftAPI.Controllers
 
             var quiz = _context.Quizzes
                 .Include(u=>u.User)
+                .Include(u => u.Questions)
                 .FirstOrDefault(u => u.QuizID == questionNew.QuizID);
             if (quiz == null)
             {
@@ -450,7 +456,19 @@ namespace EduCraftAPI.Controllers
                 newQuestion.QuizID = quiz.QuizID;
                 newQuestion.Name = questionNew.Name;
                 newQuestion.Answers = answerList;
-                quiz.CountQuestions = quiz.CountQuestions+1;
+
+                Debug.WriteLine("...");
+                Debug.WriteLine(quiz.CountQuestions);
+                Debug.WriteLine(quiz.Questions.Count);
+
+                Debug.WriteLine("...");
+
+                if (quiz.CountQuestions <= quiz.Questions.Count)
+                {
+                    quiz.CountQuestions = quiz.Questions.Count + 1;
+                }
+
+
                 _context.Questions.Add(newQuestion);
                 _context.SaveChanges();
                 return Ok(newQuestion);

@@ -320,6 +320,10 @@ namespace EduCraftAPI.Controllers
                 {
                     return NoContent();
                 }
+                if (presentationData.Slides == null|| presentationData.Slides.Count==0)
+                {
+                    return NoContent();
+                }
                 return _presentationServices.GeneratePPTX(presentationData, presentation.UserID, type);
 
             }
