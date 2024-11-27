@@ -1,9 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using EduCraftAPI.Entities.Flashcards;
+﻿using EduCraftAPI.Entities.Flashcards;
 using EduCraftAPI.Entities.Quiz;
-using EduCraftAPI.Models;
-using NPOI.HPSF;
-using System.Diagnostics;
 using System.Drawing;
 using System.Xml.Serialization;
 

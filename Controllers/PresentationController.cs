@@ -306,7 +306,7 @@ namespace EduCraftAPI.Controllers
 
         [AllowAnonymous]
         [HttpGet("/generate/presentation")]
-        public IActionResult generatePresentation([FromQuery] int presentationId, string type)
+        public ActionResult generatePresentation([FromQuery] int presentationId, string type)
         {
             try
             {
@@ -324,8 +324,9 @@ namespace EduCraftAPI.Controllers
                 {
                     return NoContent();
                 }
-                return _presentationServices.GeneratePPTX(presentationData, presentation.UserID, type);
-
+                string mimeType = (type == "pptx") ? "application/vnd.openxmlformats-officedocument.presentationml.presentation" : "application/pdf";
+            
+                return File(_presentationServices.GeneratePPTX(presentationData, presentation.UserID, type), mimeType);
             }
             catch (Exception ex)
             {

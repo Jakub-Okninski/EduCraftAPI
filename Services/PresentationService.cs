@@ -1,28 +1,21 @@
 ﻿using GemBox.Presentation;
-using Microsoft.AspNetCore.Mvc;
 
 namespace EduCraftAPI.Services
 {
     public interface IPresentationService
     {
-        FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData, int ID, string type = "pptx");
+        byte[] GeneratePPTX(EduCraftAPI.Models.Presentation presentationData, int ID, string type = "pptx");
     }
 
     public class PresentationService : IPresentationService
     {
         static PresentationService() => ComponentInfo.SetLicense("FREE-LIMITED-KEY");
 
-        public FileResult GeneratePPTX(EduCraftAPI.Models.Presentation presentationData, int ID , string type = "pptx")
+        public byte[] GeneratePPTX(EduCraftAPI.Models.Presentation presentationData, int ID , string type = "pptx")
         {
             if ((type != "pptx" && type != "pdf")|| presentationData == null || presentationData.Slides ==null|| presentationData.Slides.Count == 0)
             {
-                using (MemoryStream emptyStream = new MemoryStream())
-                {
-                    return new FileStreamResult(emptyStream, type == "pptx" ? "application/vnd.openxmlformats-officedocument.presentationml.presentation" : "application/pdf")
-                    {
-                        FileDownloadName = $"{presentationData?.Title ?? "Untitled"}.{type}"
-                    };
-                }
+                return [];
             }
 
             var presentation = new PresentationDocument();
@@ -90,11 +83,7 @@ namespace EduCraftAPI.Services
             var stream = new MemoryStream();
             presentation.Save(stream, type == "pptx" ?  SaveOptions.Pptx : SaveOptions.Pdf);
             stream.Position = 0;
-
-            return new FileStreamResult(stream, type == "pptx" ? "application/vnd.openxmlformats-officedocument.presentationml.presentation" : "application/pdf")
-            {
-                FileDownloadName = $"{presentationData.Title}.pptx"
-            };    
+            return stream.ToArray();
         }
 
 
