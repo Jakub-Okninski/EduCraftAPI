@@ -17,13 +17,15 @@ namespace EduCraftAPI.Controllers
         private readonly IPresentationService _presentationServices;
         private readonly IFileService _fileServices;
         private readonly IUserContextService _userContextService;
+        private readonly IGenerateService _generateService;
 
-        public PresentationController(DataDbContext context, IPresentationService presentationServices, IFileService fileServices, IUserContextService userContextService)
+        public PresentationController(DataDbContext context, IPresentationService presentationServices, IFileService fileServices, IUserContextService userContextService, IGenerateService generateService)
         {
             _context = context;
             _presentationServices = presentationServices;
             _fileServices = fileServices;
             _userContextService = userContextService;
+            _generateService = generateService;
         }
 
         [HttpPost("/presentation/upload/image")]
@@ -378,7 +380,7 @@ namespace EduCraftAPI.Controllers
                     }
                 }
                 slide.Id = newID + 1;
-                slide.Title = "Slajd " + newID;
+                slide.Title = "Slajd " + slide.Id;
                 presentation.Slides.Add(slide);
                 _fileServices.SavePresentationToXml(presentation, ID.ID);
                 return Ok(slide);
@@ -410,47 +412,6 @@ namespace EduCraftAPI.Controllers
             return Ok(presentation);
         }
 
-        [HttpPost("/presentation/create")]
-        public IActionResult CreatePresentation([FromBody] TitleUserDTO request)
-        {
-            var catrgory = _context.Category.FirstOrDefault(u => u.CategoryID == request.CategoryID);
-            if (catrgory == null)
-            {
-                return NoContent();
-            }
-
-            Presentations presentation = new Presentations();
-            presentation.Title = request.Title;
-            presentation.UserID = (int)_userContextService.GetUserID!;
-            presentation.CreationDate = DateTime.Now;
-            presentation.IsPublic = request.IsPublic;
-            presentation.Category = catrgory;
-            try
-            {
-                _context.Add(presentation);
-                _context.SaveChanges();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, "Wewnętrzny błąd serwera. base");
-            }
-            Presentation presentationData = new Presentation();
-            presentationData.Title = request.Title;
-            presentationData.PresentationID = presentation.PresentationsID;
-            presentationData.Slides = new List<Slide>();
-            try
-            {
-                _fileServices.SavePresentationToXml(presentationData, presentation.PresentationsID);
-            }
-            catch (Exception ex)
-            {
-                _context.Remove(presentation);
-                _context.SaveChanges();
-                return StatusCode(500, "Wewnętrzny błąd serwera. file");
-            }
-            return StatusCode(201, presentation);
-        }
-
         [HttpPost("/presentation/save")]
         public IActionResult SavePresentation([FromBody] Presentation presentation)
         {
@@ -469,5 +430,85 @@ namespace EduCraftAPI.Controllers
             }
             return Ok();
         }
+
+
+
+        [HttpPost("/presentation/create")]
+        public async Task<IActionResult> CreatePresentation([FromBody] TitleUserDTO request)
+        {
+            var catrgory = _context.Category.FirstOrDefault(u => u.CategoryID == request.CategoryID);
+            if (catrgory == null)
+            {
+                return NoContent();
+            }
+
+            Presentation presentationData = null;
+            try
+            {
+                presentationData = await _generateService.generatePresentationDataText(request.Description, request.Title);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera. base");
+            }
+
+
+            if (presentationData == null)
+            {
+                return NoContent();
+            }
+            presentationData.Title = request.Title;
+
+
+
+            Presentations presentation = new Presentations();
+            presentation.Title = request.Title;
+            presentation.UserID = (int)_userContextService.GetUserID!;
+            presentation.CreationDate = DateTime.Now;
+            presentation.IsPublic = request.IsPublic;
+            presentation.Category = catrgory;
+            try
+            {
+                _context.Add(presentation);
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera. base");
+            }
+
+
+            presentationData.PresentationID = presentation.PresentationsID;
+
+            try
+            {
+                presentationData = await _generateService.generatePresentationDataImage(presentationData, (int)_userContextService.GetUserID, presentation.PresentationsID, request.Description);
+            }
+            catch (Exception ex)
+            {
+
+                Debug.WriteLine("Wystąpił bład........");
+                Debug.WriteLine(ex.Message);
+
+            }
+
+
+
+
+
+            try
+            {
+                _fileServices.SavePresentationToXml(presentationData, presentation.PresentationsID);
+            }
+            catch (Exception ex)
+            {
+                _context.Remove(presentation);
+                _context.SaveChanges();
+                return StatusCode(500, "Wewnętrzny błąd serwera. file");
+            }
+            return StatusCode(201, presentation);
+        }
+
+        
     }
 }

@@ -1,5 +1,7 @@
 ﻿using EduCraftAPI.Entities.Flashcards;
 using EduCraftAPI.Entities.Quiz;
+using EduCraftAPI.Models;
+using NPOI.HPSF;
 using System.Drawing;
 using System.Xml.Serialization;
 
@@ -21,6 +23,7 @@ namespace EduCraftAPI.Services
         public void RemovePresentation(int PresentationID);
         public void RemoveImgDirectory(int UserID, string Type,int ItemID);
         public void RemoveImagePresentation(int UserID, int PresentationID, string FileName);
+        public  Task<Element> SaveGeneratedImagePresentation(int userID, int fileID, string imageUrl, Element element);
 
 
     }
@@ -346,5 +349,35 @@ namespace EduCraftAPI.Services
                 System.IO.File.Delete(filePath);
             }
         }
+        private string GenerateUniqueFileName(string extension)
+        {
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmssfff");
+            return $"image_{timestamp}.{extension}";
+        }
+        public async Task<Element> SaveGeneratedImagePresentation(int userID, int fileID, string imageUrl, Element element)
+        {
+            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserDataImage", "User" + userID);
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+            uploadsFolder = Path.Combine(uploadsFolder, "Presentation" + fileID);
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            using (HttpClient client = new HttpClient())
+            {
+                string fileName = GenerateUniqueFileName("png");
+                element.PathName = fileName;
+                byte[] imageBytes = await client.GetByteArrayAsync(imageUrl);
+                await File.WriteAllBytesAsync(Path.Combine(uploadsFolder, fileName), imageBytes);
+                element.Url= "data:image/png;base64," + Convert.ToBase64String(imageBytes);
+            }
+            return element;
+
+        }
+      
     }
 }

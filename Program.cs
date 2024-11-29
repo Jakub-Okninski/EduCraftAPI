@@ -57,6 +57,7 @@ namespace EduCraftAPI
             builder.Services.AddScoped<IPresentationService, PresentationService>();
             builder.Services.AddScoped<IUserContextService, UserContextService>();
             builder.Services.AddScoped<IDocumentService, DocumentService>();
+            builder.Services.AddScoped<IGenerateService, GenerateService>();
 
             builder.Services.AddHttpContextAccessor();
 
@@ -71,6 +72,7 @@ namespace EduCraftAPI
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Configuration.AddJsonFile("secrets.appsettings.json", optional: true, reloadOnChange: true);
 
             var app = builder.Build();
             using (var scope = app.Services.CreateScope())
