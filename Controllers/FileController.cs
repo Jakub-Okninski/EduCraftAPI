@@ -9,6 +9,7 @@ using System.Diagnostics;
 
 namespace EduCraftAPI.Controllers
 {
+    [Authorize(Policy = "IsBlock")]
     public class FileController : Controller
     {
         private readonly IUserContextService _userContextService;
@@ -21,7 +22,6 @@ namespace EduCraftAPI.Controllers
             _fileService = fileService;
             _userContextService = userContextService;   
         }
-        [Authorize]
         [HttpGet("/file/list")]
         public IActionResult GetList()
         {
@@ -62,7 +62,6 @@ namespace EduCraftAPI.Controllers
             return Ok(documents);
         }
 
-        [Authorize]
         [HttpGet("/file/item")]
         public IActionResult GetItem([FromQuery] string Type, int ID)
         {

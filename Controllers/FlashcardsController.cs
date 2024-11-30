@@ -12,7 +12,7 @@ using System.IO;
 
 namespace EduCraftAPI.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "IsBlock")]
     public class FlashcardsController : Controller
     {
         private readonly DataDbContext _context;

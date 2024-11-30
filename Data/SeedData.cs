@@ -50,6 +50,7 @@ namespace EduCraftAPI.Entities{
                         FirstName = "Jakub",
                         LastName = "Okniński",
                         RoleID = 1,
+                        IsBlocked=false,
                         Password = "AQAAAAIAAYagAAAAEPutQJKTy3Aemoqw8jepJSnmX9kyn0XzBdABnEavR2y+rSJ8cNYOJGRviAiX4g2MJQ=="
                     });
                     context.SaveChanges();

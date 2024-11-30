@@ -33,6 +33,12 @@ namespace EduCraftAPI
             // Add services to the container.
             var authenticationSetting = new AuthenticationSettings();
             builder.Services.AddSingleton(authenticationSetting);
+
+            builder.Services.AddAuthorization(option =>
+            {
+                option.AddPolicy("IsBlock", builder => builder.RequireClaim("IsBlocked", false.ToString()));
+
+            });
             builder.Services.AddAuthentication(option =>
             {
                 option.DefaultAuthenticateScheme = "Bearer";
@@ -51,6 +57,8 @@ namespace EduCraftAPI
                 };
             });
 
+
+          
             builder.Configuration.GetSection("Authentication").Bind(authenticationSetting);
             
             builder.Services.AddScoped<IFileService, FileService>();

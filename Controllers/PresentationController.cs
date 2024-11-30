@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EduCraftAPI.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "IsBlock")]
     public class PresentationController : Controller
     {
         private readonly DataDbContext _context;

@@ -27,7 +27,7 @@ namespace EduCraftAPI.Controllers
         }
 
 
-        [Authorize]
+        [Authorize(Policy = "IsBlock")]
         [HttpGet("/user")]
         public IActionResult getUser([FromQuery] int userID)
         {
@@ -48,7 +48,7 @@ namespace EduCraftAPI.Controllers
             }
             return Ok(user);
         }
-        [Authorize]
+        [Authorize(Policy = "IsBlock")]
         [HttpGet("/user/statistic")]
         public IActionResult getUserStatistic([FromQuery] int userID)
         {
@@ -70,7 +70,7 @@ namespace EduCraftAPI.Controllers
             });
         }
 
-        [Authorize]
+        [Authorize(Policy = "IsBlock")]
         [HttpPost("/user/password/change")]
         public IActionResult userPassword([FromBody] UserDTO userDTO)
         {
@@ -120,6 +120,7 @@ namespace EduCraftAPI.Controllers
                 Email = registerUserDto.Email,
                 FirstName = registerUserDto.FirstName,
                 LastName = registerUserDto.LastName,
+                IsBlocked=false,
                 RoleID = _context.Roles.FirstOrDefault(u => u.Name == "User").RoleID
             };
 
@@ -156,12 +157,18 @@ namespace EduCraftAPI.Controllers
 
             }
 
+            if (user.IsBlocked)
+            {
+                return Unauthorized("Twoje konto zostało zablokowane.");
+            }
             var claims = new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
                 new Claim(ClaimTypes.Name, user.FirstName),
                 new Claim(ClaimTypes.Role, user.Role.Name),
-                new Claim("LastName", user.LastName)
+                new Claim("LastName", user.LastName),
+                new Claim("IsBlocked", user.IsBlocked.ToString())
+
 
             };
 
@@ -171,7 +178,7 @@ namespace EduCraftAPI.Controllers
 
             var token = new JwtSecurityToken(_authenticationSettings.JwtIssuer, _authenticationSettings.JwtIssuer, claims, expires: expires, signingCredentials: cred);
                 var tokenHandler = new JwtSecurityTokenHandler();
-            return Ok(new { token = tokenHandler.WriteToken(token) , name = user.FirstName, id= user.UserID.ToString(), role=user.Role.Name });
+            return Ok(new { token = tokenHandler.WriteToken(token) , name = user.FirstName, id= user.UserID.ToString(), role=user.Role.Name, isBlocked=user.IsBlocked.ToString() });
         }
     }
 }

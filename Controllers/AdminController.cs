@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
 using EduCraftAPI.Data;
+using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Models;
 using EduCraftAPI.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EduCraftAPI.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin",Policy = "IsBlock")]
     public class AdminController : Controller
     {
         private readonly DataDbContext _context;
@@ -18,6 +19,29 @@ namespace EduCraftAPI.Controllers
         {
             _context = context;
             _userContextService = userContextService;
+        }
+
+
+
+        [HttpPost("/admin/user/update")]
+        public IActionResult updatePresentation([FromBody] IsBlockedDTO isBlockedDTO)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.UserID == isBlockedDTO.userID);
+            if (user == null)
+            {
+                return NoContent();
+            }
+            try
+            {
+                user.RoleID = isBlockedDTO.roleID;
+                user.IsBlocked = isBlockedDTO.IsBlocked;
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
+            }
+            return Ok(user);
         }
 
         [HttpGet("/admin/search/documents")]
@@ -48,7 +72,8 @@ namespace EduCraftAPI.Controllers
                     Title = p.Title,
                     FirstName = p.User.FirstName,
                     LastName = p.User.LastName,
-                    Type= type,
+                    UserID = p.User.UserID,
+                    Type = type,
                 }).ToList();
 
                 return Ok(items);
@@ -73,6 +98,7 @@ namespace EduCraftAPI.Controllers
                     Title = p.Name,
                     FirstName = p.User.FirstName,
                     LastName = p.User.LastName,
+                    UserID = p.User.UserID,
                     Type = type,
                 }).ToList();
 
@@ -99,6 +125,7 @@ namespace EduCraftAPI.Controllers
                     Title = p.Title,
                     FirstName = p.User.FirstName,
                     LastName = p.User.LastName,
+                    UserID = p.User.UserID,
                     Type = type,
                 }).ToList();
 
@@ -133,7 +160,16 @@ namespace EduCraftAPI.Controllers
             {
                 query = query.Where(p => p.Email.Contains(email));
             }
-            var items = query.ToList();
+            var items = query.Select(p => new
+            {
+                Email = p.Email,
+                Role = p.Role.Name,
+                RoleID = p.RoleID,
+                FirstName = p.FirstName,
+                LastName = p.LastName,
+                UserID = p.UserID,
+                IsBlocked = p.IsBlocked
+            }).ToList();
 
             return Ok(items);
           

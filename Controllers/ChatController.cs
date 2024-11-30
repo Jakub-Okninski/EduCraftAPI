@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace EduCraftAPI.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "IsBlock")]
     public class ChatController : Controller
     {
 

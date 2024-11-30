@@ -11,7 +11,7 @@ using Question = EduCraftAPI.Entities.Quiz.Question;
 
 namespace EduCraftAPI.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "IsBlock")]
     public class QuizController : Controller
     {
         private readonly DataDbContext _context;

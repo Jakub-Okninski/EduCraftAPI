@@ -13,7 +13,7 @@ namespace EduCraftAPI.Entities.User
         public string Password { get; set; }
         public int RoleID { get; set; }
         public Role Role { get; set; }
-
+        public Boolean IsBlocked { get; set; }
 
 
     }

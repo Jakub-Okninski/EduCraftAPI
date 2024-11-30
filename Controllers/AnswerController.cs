@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EduCraftAPI.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "IsBlock")]
     public class AnswerController : Controller
     {
         private readonly DataDbContext _context;
@@ -14,6 +14,8 @@ namespace EduCraftAPI.Controllers
         {
             _context = context;
         }
+
+
 
         [HttpPut("/answer/edit")]
         public async Task<IActionResult> UpdateAnswer([FromBody] Answer newAnswer)
