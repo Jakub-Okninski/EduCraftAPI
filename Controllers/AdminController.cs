@@ -1,8 +1,10 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
 using EduCraftAPI.Data;
 using EduCraftAPI.Models;
+using EduCraftAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduCraftAPI.Controllers
 {
@@ -10,12 +12,15 @@ namespace EduCraftAPI.Controllers
     public class AdminController : Controller
     {
         private readonly DataDbContext _context;
-        public AdminController(DataDbContext context)
+        private readonly IUserContextService _userContextService;
+
+        public AdminController(DataDbContext context, IUserContextService userContextService)
         {
             _context = context;
+            _userContextService = userContextService;
         }
 
-        [HttpGet("/admin/search")]
+        [HttpGet("/admin/search/documents")]
         public IActionResult adminSearch(
            string? name = null,
            string? type = "presentation",
@@ -104,6 +109,37 @@ namespace EduCraftAPI.Controllers
                 return NoContent();
             }         
         }
+
+        [HttpGet("/admin/search/users")]
+        public IActionResult adminSearchUsers(
+          string? username = null,
+          string? email = null,
+          int? id = null
+
+        )
+        {
+            var query = _context.Users.AsQueryable();
+            query.Include(r => r.Role);
+            query = query.Where(p => p.UserID != _userContextService.GetUserID);
+            if (id != null)
+            {
+                query = query.Where(p => p.UserID == id);
+            }
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                query = query.Where(p => (p.FirstName + " " + p.LastName).Contains(username));
+            }
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                query = query.Where(p => p.Email.Contains(email));
+            }
+            var items = query.ToList();
+
+            return Ok(items);
+          
+        }
+
+
         [HttpDelete("admin/delete/item")]
         public async Task<IActionResult> deleteItem([FromQuery] int itemID, string type)
         {

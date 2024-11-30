@@ -19,6 +19,15 @@
           <Ops>
             <Op>
               <Insert>C#</Insert>
+              <Attributes>
+                <Bold>true</Bold>
+                <Italic xsi:nil="true" />
+                <Underline xsi:nil="true" />
+                <Strike xsi:nil="true" />
+                <Blockquote xsi:nil="true" />
+                <Header xsi:nil="true" />
+                <Indent xsi:nil="true" />
+              </Attributes>
             </Op>
             <Op>
               <Insert>&amp;#10;</Insert>

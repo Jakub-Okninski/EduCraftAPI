@@ -47,14 +47,65 @@ namespace EduCraftAPI.Services
                         {
                             var paragraph = textShape.AddParagraph();
                             var run = paragraph.AddRun(""+o.Insert);
+                            run.Format.Size = 26;
+
                             if (i+1 < e.Ops.Count - 1)
                             {
                                 run.Text = o.Insert.TrimEnd('\n');
                             }           
                             if (o.Attributes?.Bold == true)
                             {
-                                run.Format.Bold = true;
+                                try
+                                {
+                                    if (textShape.Paragraphs[i - 1]?.Elements[0] != null)
+                                    {
+                                        textShape.Paragraphs[i - 1].Elements[0].Format.Bold = true;
+                                    }
+
+                                }
+                                catch(Exception ex)
+                                {
+
+                                }
+                             
+                                run.Format.Bold = true; 
                             }
+                            if (o.Attributes?.Header == 1)
+                            {
+                                try
+                                {
+                                    if (textShape.Paragraphs[i - 1]?.Elements[0] != null)
+                                    {
+                                        textShape.Paragraphs[i - 1].Elements[0].Format.Size = 50;
+                                    }
+
+                                }
+                                catch (Exception ex)
+                                {
+
+                                }
+                              
+                                run.Format.Size = 50;
+
+                            }
+                            if (o.Attributes?.Align == "center")
+                            {
+                                try
+                                {
+                                    if (textShape.Paragraphs[i - 1] != null)
+                                    {
+                                        textShape.Paragraphs[i - 1].Format.Alignment = HorizontalAlignment.Center;
+                                    }
+
+                                }
+                                catch (Exception ex)
+                                {
+
+                                }
+                             
+                                paragraph.Format.Alignment = HorizontalAlignment.Center;
+                            }
+
                             i++;    
                         }
                    

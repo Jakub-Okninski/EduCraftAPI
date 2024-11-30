@@ -1,10 +1,12 @@
 ﻿using EduCraftAPI.Data;
 using EduCraftAPI.Entities.Flashcards;
+using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Models;
 using EduCraftAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
 using System.Diagnostics;
 using System.IO;
 
@@ -82,7 +84,7 @@ namespace EduCraftAPI.Controllers
 
         [AllowAnonymous]
         [HttpGet("/flashcards/generate")]
-        public IActionResult GenerateFlashcardsOnID([FromQuery] int FlashcardID)
+        public IActionResult GenerateFlashcardsOnID([FromQuery] int FlashcardID, [FromQuery] string Type)
         {
             var flashcards = _context.Flashcards
                 .Include(p => p.Flashcard)
@@ -93,10 +95,16 @@ namespace EduCraftAPI.Controllers
                 return NoContent();
             }
 
-
-            var stream = _documentService.GenerateFlashcards(flashcards);
-            return File(stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "flashcards_" + flashcards.Title + ".docx");
-
+            if (Type == "pdf")
+            {
+                var stream = _documentService.GenerateFlashcardsAsPdf(flashcards);
+                return File(stream, "application/pdf", "flashcards_" + flashcards.Title + ".pdf");
+            }
+            else
+            {
+                var stream = _documentService.GenerateFlashcards(flashcards);
+                return File(stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "flashcards_" + flashcards.Title + ".docx");
+            }
         }
 
 

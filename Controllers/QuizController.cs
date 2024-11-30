@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.IO;
 using Question = EduCraftAPI.Entities.Quiz.Question;
 
 namespace EduCraftAPI.Controllers
@@ -52,7 +53,7 @@ namespace EduCraftAPI.Controllers
 
         [AllowAnonymous]
         [HttpGet("/quiz/generate")]
-        public IActionResult GenerateQuizOnID([FromQuery] int QuizID, [FromQuery] bool withCorrect = false)
+        public IActionResult GenerateQuizOnID([FromQuery] int QuizID, [FromQuery] string Type, [FromQuery] bool withCorrect = false)
         {
             var quiz = _context.Quizzes
                 .Include(p => p.Questions)
@@ -78,18 +79,22 @@ namespace EduCraftAPI.Controllers
 
                 if (quiz.Questions.Count >= quiz.CountQuestions)
                 {
-                    // Remove excess questions
                     quiz.Questions = quiz.Questions.Take(quiz.CountQuestions).ToList();
                 }
             }
-            
+        
+            if (Type == "pdf")
+            {
+                var stream = _documentService.GenerateQuizAsPdf(quiz, withCorrect);
+                return File(stream, "application/pdf", "quiz_" + quiz.Name + ".pdf");
+            }
+            else
+            {
+                 var stream = _documentService.GenerateQuiz(quiz, withCorrect);
+                return File(stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "quiz_" + quiz.Name + ".docx");
 
-            var stream = _documentService.GenerateQuiz(quiz, withCorrect);
-            return File(stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "quiz_" + quiz.Name + ".docx");
-
+            }
         }
-
-
         [HttpDelete("/quiz/remove/image")]
         public IActionResult removeImageQuiz([FromQuery] int QuestionID)
         {
