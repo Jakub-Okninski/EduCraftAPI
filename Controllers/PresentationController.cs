@@ -5,8 +5,6 @@ using System.Diagnostics;
 using EduCraftAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using EduCraftAPI.Services;
-using SixLabors.ImageSharp;
-using Microsoft.EntityFrameworkCore;
 
 namespace EduCraftAPI.Controllers
 {

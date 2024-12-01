@@ -65,14 +65,25 @@ namespace EduCraftAPI.Controllers
         [HttpGet("/file/item")]
         public IActionResult GetItem([FromQuery] string Type, int ID)
         {
-            var item = _fileService.getAllFIle((int)_userContextService.GetUserID, Type, ID);
-            if (item != null)
-            {
-                return Ok(item);
-            } 
-            return NoContent();
 
-            
+            if(Type == "generated" || ID < 0)
+            {
+                var item = _fileService.getAllFIle((int)_userContextService.GetUserID, "Generated");
+                if (item != null)
+                {
+                    return Ok(item);
+                }
+            }
+            else
+            {
+                var item = _fileService.getAllFIle((int)_userContextService.GetUserID, Type+ID);
+                if (item != null)
+                {
+                    return Ok(item);
+                }
+            }
+          
+            return NoContent();       
         }
 
     }

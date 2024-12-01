@@ -1,4 +1,5 @@
-﻿using EduCraftAPI.Models;
+﻿using EduCraftAPI.Entities.Quiz;
+using EduCraftAPI.Models;
 using EduCraftAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,12 @@ namespace EduCraftAPI.Controllers
     {
 
         private readonly IGenerateService _generateService;
+        private readonly IUserContextService _userContextService;
 
-        public ChatController(IGenerateService generateService)
+        public ChatController(IGenerateService generateService, IUserContextService userContextService)
         {
             _generateService = generateService;
+            _userContextService = userContextService;
         }
 
 
@@ -28,14 +31,38 @@ namespace EduCraftAPI.Controllers
             if (massage.data.IsNullOrEmpty()) {
                 return NoContent();
             }
-            try
+            if (massage.isPicture)
             {
-                var answer = await _generateService.generateAnswer(massage.data);
-                return Ok(answer);
-            } catch (Exception ex) {
-                Debug.WriteLine(ex.Message);
-                return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
+                try
+                {
+                    var answer = await _generateService.generatePicture(massage.data, (int)_userContextService.GetUserID);
+                    if (answer == null || answer.Count == 0)
+                    {
+                        return NoContent();
+                    }
+                    Debug.WriteLine(answer);
+
+                    return Ok(new { type = true, value = answer });
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
+                }
             }
+            else
+            {
+                try
+                {
+                    var answer = await _generateService.generateAnswer(massage.data);
+                    return Ok(new { type = false, value = answer });
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    return StatusCode(500, "Wewnętrzny błąd serwera." + ex);
+                }
+            }         
         }       
     }
 }

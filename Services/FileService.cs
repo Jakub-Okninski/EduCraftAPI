@@ -1,7 +1,6 @@
 ﻿using EduCraftAPI.Entities.Flashcards;
 using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Models;
-using NPOI.HPSF;
 using System.Drawing;
 using System.Xml.Serialization;
 
@@ -19,12 +18,13 @@ namespace EduCraftAPI.Services
         public Flashcards AddFlashCardsImg(Flashcards flashcards);
         public string SaveFileImgFlashCard(int userID, int FlashCardID, IFormFile file);
         public void RemoveImageFlashCard(int userID, int FlashCardID, string fileName);
-        public string[] getAllFIle(int UserID, string Type, int ItemID);
+        public string[] getAllFIle(int UserID, string Type);
         public void RemovePresentation(int PresentationID);
         public void RemoveImgDirectory(int UserID, string Type,int ItemID);
         public void RemoveImagePresentation(int UserID, int PresentationID, string FileName);
         public  Task<Element> SaveGeneratedImagePresentation(int userID, int fileID, string imageUrl, Element element);
-
+        public Task<String> SaveGeneratedImage(int userID, string imageUrl);
+        public Task<string> SaveGeneratedImageQuizAndFlashcard(int userID, string type, string imageUrl);
 
     }
     public class FileService : IFileService
@@ -267,10 +267,10 @@ namespace EduCraftAPI.Services
                 System.IO.File.Delete(filePath);
             }
         }
-        public string[] getAllFIle(int UserID, string Type, int ItemID)
+        public string[] getAllFIle(int UserID, string Type)
         {
 
-            var filePath = Path.Combine("UserDataImage", "User" + UserID, Type + ItemID);
+            var filePath = Path.Combine("UserDataImage", "User" + UserID, Type );
 
             if (Directory.Exists(filePath))
             {
@@ -378,6 +378,47 @@ namespace EduCraftAPI.Services
             return element;
 
         }
-      
+        public async Task<String> SaveGeneratedImage(int userID, string imageUrl)
+        {
+            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserDataImage", "User" + userID);
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+            uploadsFolder = Path.Combine(uploadsFolder, "Generated");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+            
+            using (HttpClient client = new HttpClient())
+            {
+                string fileName = GenerateUniqueFileName("png");
+                byte[] imageBytes = await client.GetByteArrayAsync(imageUrl);
+                await File.WriteAllBytesAsync(Path.Combine(uploadsFolder, fileName), imageBytes);
+                return "data:image/png;base64," + Convert.ToBase64String(imageBytes);
+            } 
+        }
+        public async Task<string> SaveGeneratedImageQuizAndFlashcard(int userID, string type, string imageUrl)
+        {
+            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserDataImage", "User" + userID);
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+            uploadsFolder = Path.Combine(uploadsFolder, type);
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            using (HttpClient client = new HttpClient())
+            {
+                string fileName = GenerateUniqueFileName("png");
+                byte[] imageBytes = await client.GetByteArrayAsync(imageUrl);
+                await File.WriteAllBytesAsync(Path.Combine(uploadsFolder, fileName), imageBytes);
+                return fileName;
+            }
+        }
     }
 }

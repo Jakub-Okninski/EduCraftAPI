@@ -140,8 +140,6 @@ namespace EduCraftAPI.Services
             stream.Position = 0;
             return stream.ToArray();
         }
-
-
         private Stream ConvertBase64ToStream(string base64String)
         {
             var imageStream = new MemoryStream(Convert.FromBase64String(base64String.Replace("data:image/png;base64,", "")));

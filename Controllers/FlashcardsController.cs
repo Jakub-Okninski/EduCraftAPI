@@ -6,9 +6,7 @@ using EduCraftAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SkiaSharp;
 using System.Diagnostics;
-using System.IO;
 
 namespace EduCraftAPI.Controllers
 {
@@ -19,13 +17,15 @@ namespace EduCraftAPI.Controllers
         private readonly IUserContextService _userContextService;
         private readonly IFileService _fileServices;
         private readonly IDocumentService _documentService;
+        private readonly IGenerateService _generateService;
 
-        public FlashcardsController(DataDbContext context, IUserContextService userContextService, IFileService fileServices, IDocumentService documentService)
+        public FlashcardsController(DataDbContext context, IUserContextService userContextService, IFileService fileServices, IDocumentService documentService, IGenerateService generateService)
         {
             _context = context;
             _userContextService = userContextService;
             _fileServices = fileServices;
-            _documentService= documentService; 
+            _documentService= documentService;
+            _generateService = generateService;
         }
 
 
@@ -305,43 +305,55 @@ namespace EduCraftAPI.Controllers
 
 
         [HttpPost("/flashcards/create")]
-        public IActionResult CreateFlashcards([FromBody] TitleUserDTO createFlashcardsDto)
+        public async Task<IActionResult> CreateFlashcardsAsync([FromBody] TitleUserDTO createFlashcardsDto)
         {
             if (createFlashcardsDto == null)
             {
                 return BadRequest("Nieprawidłowe dane.");
             }
-
-            var catrgory = _context.Category.FirstOrDefault(u => u.CategoryID == createFlashcardsDto.CategoryID);
-            if (catrgory == null)
+            try
             {
-                return NoContent();
+                var catrgory = _context.Category.FirstOrDefault(u => u.CategoryID == createFlashcardsDto.CategoryID);
+                if (catrgory == null)
+                {
+                    return NoContent();
+                }
+                Flashcards flashcards = new Flashcards
+                {
+                    IsPublic = createFlashcardsDto.IsPublic,
+                    CategoryID= catrgory.CategoryID,
+                    CreationDate = DateTime.Now,
+                    UserID = (int)_userContextService.GetUserID,
+                    Title = createFlashcardsDto.Title,
+                    Flashcard = new List<Flashcard>()
+                };
+
+                Flashcards newFlashcards = await _generateService.generateFlashcardsDataText(createFlashcardsDto.Description, createFlashcardsDto.Title, flashcards);
+                if (newFlashcards.Flashcard.Count <= 0)
+                {
+                    return NoContent();
+                }
+
+                _context.Flashcards.Add(newFlashcards);
+                _context.SaveChanges();
+
+                try
+                {
+                    newFlashcards = await _generateService.generateFlashcardsDataImage(newFlashcards, (int)_userContextService.GetUserID, newFlashcards.FlashcardsID, createFlashcardsDto.Description);
+                    _context.SaveChanges();
+                }
+                catch(Exception e)
+                {
+                    Debug.WriteLine(e.Message);
+                }
+
+                return Ok(newFlashcards);
             }
-            var flashcards = new Flashcards
+            catch (Exception e)
             {
-                IsPublic = createFlashcardsDto.IsPublic,
-                CategoryID= catrgory.CategoryID,
-                CreationDate = DateTime.Now,
-                UserID = (int)_userContextService.GetUserID,
-                Title = createFlashcardsDto.Title,
-                Flashcard = new List<Flashcard>()
-            };
+                return StatusCode(500, $"Internal server error: {e.Message}");
+            }
 
-            //if (createFlashcardsDto?.Flashcards != null)
-            //{
-            //    foreach (var cardDto in createFlashcardsDto.Flashcards)
-            //    {
-            //        var flashcard = new Flashcard
-            //        {
-            //            Title = cardDto.Title,
-            //            Description = cardDto.Description
-            //        };
-            //        flashcards.Flashcard.Add(flashcard);
-            //    }
-            //}
-            _context.Flashcards.Add(flashcards);
-            _context.SaveChanges();
-            return Ok(flashcards);
         }
     }
 }

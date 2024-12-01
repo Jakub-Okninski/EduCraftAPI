@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Drawing.Charts;
+﻿using EduCraftAPI.Entities.Flashcards;
+using EduCraftAPI.Entities.Quiz;
 using EduCraftAPI.Models;
 using Newtonsoft.Json;
 using System.Diagnostics;
@@ -15,6 +16,11 @@ namespace EduCraftAPI.Services
         public Task<Models.Presentation> generatePresentationDataText(string descriptionPresentation, string titleMain);
         public Task<Presentation> generatePresentationDataImage(Presentation presentation, int UserID, int fileID, string titleMain);
         public Task<String> generateAnswer(string prompt);
+        public Task<List<String>> generatePicture(string prompt, int userID);
+        public Task<Quiz> generateQuizDataText(string descriptionQuiz, string titleMain, Quiz quiz);
+        public Task<Quiz> generateQuizDataImage(Quiz quiz, int UserID, int fileID, string titleMain);
+        public Task<Flashcards> generateFlashcardsDataText(string descriptionFlashcards, string titleMain, Flashcards flashcards);
+        public Task<Flashcards> generateFlashcardsDataImage(Flashcards flashcards, int UserID, int fileID, string titleMain);
     }
     public class GenerateService : IGenerateService
     {
@@ -27,12 +33,8 @@ namespace EduCraftAPI.Services
             _fileService = fileService;
             _apiKey = configuration["ApiKeys:myKey"]!;
         } 
-
         public async Task<String> generateAnswer(string prompt)
         {
-
-       
-
 
             string apiUrl = "https://api.openai.com/v1/chat/completions";
             Debug.WriteLine(prompt);
@@ -42,9 +44,9 @@ namespace EduCraftAPI.Services
                 model = "gpt-4o-mini",
                 messages = new[]
                 {
-                new { role = "user", content = $"Jesteś asystentem. Odpowiedz w max 3 zdaniach. Tresc: {prompt}" }
+                new { role = "user", content = $"Jesteś asystentem. Odpowiedz w max 1 zdaniu. Tresc: {prompt}" }
             },
-                max_tokens = 200,
+                max_tokens = 150,
                 temperature = 1.0,
                 top_p = 1.0,
                 frequency_penalty = 0.0,
@@ -78,7 +80,45 @@ namespace EduCraftAPI.Services
 
 
         }
+        public async Task<List<String>> generatePicture(string prompt, int userID)
+        {
+            string apiUrl = "https://api.openai.com/v1/images/generations";
 
+            var requestBody = new
+            {
+                model = "dall-e-2",
+                prompt = "Temat zdjecia: " + prompt,
+                n = 1,
+                size = "256x256"
+            };
+            List<String> imageUrls = new List<String>();
+
+
+            string jsonRequest = JsonConvert.SerializeObject(requestBody);
+
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
+
+                var response = await client.PostAsync(apiUrl, new StringContent(jsonRequest, Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    var responseObject = JsonConvert.DeserializeObject<ImageResponse>(responseContent);
+                    foreach (var image in responseObject.Data)
+                    {
+                        imageUrls.Add(await _fileService.SaveGeneratedImage(userID, image.Url));
+                        Console.WriteLine($"Generated image URL: {image.Url}");
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            return imageUrls;
+        }
         public async Task<Presentation> generatePresentationDataImage(Presentation presentation, int UserID, int fileID, string titleMain)
         {
                
@@ -332,5 +372,244 @@ namespace EduCraftAPI.Services
             return presentationData;
          
         }
+        public async Task<Quiz> generateQuizDataText(string descriptionQuiz, string titleMain,  Quiz quiz)
+        {
+            string apiUrl = "https://api.openai.com/v1/chat/completions";
+            Debug.WriteLine(descriptionQuiz);
+
+            var requestBody = new
+            {
+                model = "gpt-4o-mini",
+                messages = new[]
+                {
+                new { role = "user", content = $"Utwórz 2 pytania do quizu na podany temat, temat to: {descriptionQuiz}. Maksymalnie po jednym zdaniu na pytanie i odpowiedzi. pytanie od odpowiedzi oddziel $$$, poszczególne pytania ### a poszczególne odpowiedzi oddziel &&&. Jeśli jest poprawna dodaj odp+, nic poza tym. Przykład schematu:  Ile to 2+2? $$$ 3 &&&odp+ 4  &&& 5 ###. niczego nie numeruj" }
+            },
+                max_tokens = 300,
+                temperature = 1.0,
+                top_p = 1.0,
+                frequency_penalty = 0.0,
+                presence_penalty = 0.0
+            };
+
+
+            string jsonRequest = JsonConvert.SerializeObject(requestBody);
+            string input = "";
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
+                var response = await client.PostAsync(apiUrl, new StringContent(jsonRequest, Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    dynamic responseObject = JsonConvert.DeserializeObject(responseContent);
+                    input = responseObject.choices[0].message.content;
+
+                    Debug.WriteLine("Wygenerowane dane:");
+                    Debug.WriteLine(input);
+                }
+                else
+                {
+                    Debug.WriteLine($"Błąd: {response.StatusCode}");
+                }
+            }
+
+            string[] questions = input.Split(new string[] { "###" }, StringSplitOptions.RemoveEmptyEntries);
+            int number = 1;
+            foreach (string q in questions)
+            {
+                string[] parts = q.Split(new string[] { "$$$" }, StringSplitOptions.RemoveEmptyEntries);
+                Question newQuestion = new Question();
+
+                if (parts.Length == 2)
+                {
+
+                    string question = parts[0].Trim();
+                    string answers = parts[1].Trim();
+                    Console.WriteLine($"Pytanie: {question}");
+                    Console.WriteLine($"odp: {answers}");
+
+                    string[] options = answers.Split(new string[] { "&&&" }, StringSplitOptions.RemoveEmptyEntries);
+                    newQuestion.Name = question;
+                    newQuestion.Answers = new List<Answer>();
+               
+                    for (int i = 0; i < options.Length; i++)
+                    {
+                        string option = options[i].Trim();
+                        bool isCorrect = option.Contains("odp+");
+                        Console.WriteLine($"({i + 1}) {option.Trim()} {(isCorrect ? "[Poprawna]" : "")}");
+                        option = option.Replace("odp+", "");
+
+                        if(option != "")
+                        {
+                            Answer newAnswer = new Answer();
+                            newAnswer.Name = option.Trim();
+                            newAnswer.IsCorrect = isCorrect;
+                            newQuestion.Answers.Add(newAnswer);
+                        }
+
+                    }
+                    if(newQuestion.Answers.Count > 0)
+                    {
+                        quiz.Questions.Add(newQuestion);
+                        quiz.CountQuestions = number;
+                        number++;
+                    }
+                }
+            }
+            return quiz;
+        }
+        public async Task<Quiz> generateQuizDataImage(Quiz quiz, int UserID, int fileID, string titleMain)
+        {
+            var imageUrls = new List<string>();
+            string apiUrl = "https://api.openai.com/v1/images/generations";
+
+            var requestBody = new
+            {
+                model = "dall-e-2",
+                prompt = "Zdjecie do quizu na temat: " + titleMain,
+                n = 1,
+                size = "256x256"
+            };
+
+
+            string jsonRequest = JsonConvert.SerializeObject(requestBody);
+
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
+
+                var response = await client.PostAsync(apiUrl, new StringContent(jsonRequest, Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    var responseObject = JsonConvert.DeserializeObject<ImageResponse>(responseContent);
+                    foreach (var image in responseObject.Data)
+                    {
+                        Console.WriteLine($"Generated image URL: {image.Url}");
+                        imageUrls.Add(image.Url);
+                    }
+                } 
+            }
+            int index = 1;
+            foreach (var question in quiz.Questions)
+            {
+                if (index % 2 == 0 && imageUrls.Count >= 1)
+                {
+                    string filename = await _fileService.SaveGeneratedImageQuizAndFlashcard(UserID, "Quiz"+ fileID, imageUrls[0]);
+                    question.FileName = filename;
+                }
+                index++;
+            }
+            return quiz;
+        }
+        public async Task<Flashcards> generateFlashcardsDataText(string descriptionFlashcards, string titleMain, Flashcards flashcards)
+        {
+            string apiUrl = "https://api.openai.com/v1/chat/completions";
+            Debug.WriteLine(descriptionFlashcards);
+
+            var requestBody = new
+            {
+                model = "gpt-4o-mini",
+                messages = new[]
+                {
+                new { role = "user", content = $"Utwórz 2 fiszki na podany temat, temat to: {descriptionFlashcards}. Hasło od Opisu oddziel &&& a poszczególne fiszki oddziel ###, nic poza tym. Maksymalnie po jednym zdaniu na hasło i opis. Przykład: Java &&& Język programowania ###" }
+            },
+                max_tokens = 200,
+                temperature = 1.0,
+                top_p = 1.0,
+                frequency_penalty = 0.0,
+                presence_penalty = 0.0
+            };
+
+
+            string jsonRequest = JsonConvert.SerializeObject(requestBody);
+            string input = "";
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
+                var response = await client.PostAsync(apiUrl, new StringContent(jsonRequest, Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    dynamic responseObject = JsonConvert.DeserializeObject(responseContent);
+                    input = responseObject.choices[0].message.content;
+
+                    Debug.WriteLine("Wygenerowane dane:");
+                    Debug.WriteLine(input);
+                }
+                else
+                {
+                    Debug.WriteLine($"Błąd: {response.StatusCode}");
+                }
+            }
+
+            string[] flashcard = input.Split(new string[] { "###" }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string flash in flashcard)
+            {
+                string[] parts = flash.Split(new string[] { "&&&" }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 2)
+                {
+                    Flashcard newFlashcard = new Flashcard();
+                    string title = parts[0].Trim();
+                    string description = parts[1].Trim();
+                    if(title!="" && description != "")
+                    {
+                        newFlashcard.Title = title;
+                        newFlashcard.Description = description;
+                        flashcards.Flashcard.Add(newFlashcard);
+                    }     
+                }
+            }
+            return flashcards;
+        }
+        public async Task<Flashcards> generateFlashcardsDataImage(Flashcards flashcards, int UserID, int fileID, string titleMain)
+        {
+            var imageUrls = new List<string>();
+            string apiUrl = "https://api.openai.com/v1/images/generations";
+
+            var requestBody = new
+            {
+                model = "dall-e-2",
+                prompt = "Zdjecie do fiszki na temat: " + titleMain,
+                n = 1,
+                size = "256x256"
+            };
+
+
+            string jsonRequest = JsonConvert.SerializeObject(requestBody);
+
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
+
+                var response = await client.PostAsync(apiUrl, new StringContent(jsonRequest, Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    var responseObject = JsonConvert.DeserializeObject<ImageResponse>(responseContent);
+                    foreach (var image in responseObject.Data)
+                    {
+                        Console.WriteLine($"Generated image URL: {image.Url}");
+                        imageUrls.Add(image.Url);
+                    }
+                }
+            }
+            int index = 1;
+            foreach (var card in flashcards.Flashcard)
+            {
+                if (index % 2 == 0 && imageUrls.Count >= 1)
+                {
+                    string filename = await _fileService.SaveGeneratedImageQuizAndFlashcard(UserID, "Flashcard" + fileID, imageUrls[0]);
+                    card.FileName = filename;
+                }
+                index++;
+            }
+            return flashcards;
+        }
+
     }
 }

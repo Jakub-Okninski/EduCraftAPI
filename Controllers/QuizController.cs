@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
-using System.IO;
 using Question = EduCraftAPI.Entities.Quiz.Question;
 
 namespace EduCraftAPI.Controllers
@@ -18,13 +17,15 @@ namespace EduCraftAPI.Controllers
         private readonly IUserContextService _userContextService;
         private readonly IFileService _fileServices;
         private readonly IDocumentService _documentService;
+        private readonly IGenerateService _generateService;
 
-        public QuizController(DataDbContext context, IUserContextService userContextService, IFileService fileServices, IDocumentService documentService)
+        public QuizController(DataDbContext context, IUserContextService userContextService, IFileService fileServices, IDocumentService documentService, IGenerateService generateService)
         {
             _context = context;
             _userContextService = userContextService;
             _fileServices = fileServices;
             _documentService = documentService;
+            _generateService = generateService;
         }
 
         [HttpGet("/quizs/info")]
@@ -482,7 +483,7 @@ namespace EduCraftAPI.Controllers
             }
         }
         [HttpPost("/quiz/generate")]
-        public IActionResult quizGenerate([FromBody] TitleUserDTO quizRequest)
+        public async Task<IActionResult> quizGenerate([FromBody] TitleUserDTO quizRequest)
         {
             if (quizRequest == null)
             {
@@ -493,7 +494,6 @@ namespace EduCraftAPI.Controllers
             {
                 return NoContent();
             }
-
             try
             {
                 var quiz = new Quiz
@@ -503,26 +503,28 @@ namespace EduCraftAPI.Controllers
                     IsPublic = quizRequest.IsPublic,
                     CategoryID = catrgory.CategoryID,
                     CreationDate = DateTime.Now,
-                    Questions = new List<Question>
-                    {
-                        new Question
-                        {
-                            Name = "What is the capital of France?",
-                            Answers = new List<Answer>
-                            {
-                                new Answer { Name = "Paris", IsCorrect = true },
-                                new Answer { Name = "Berlin", IsCorrect = false },
-                                new Answer { Name = "Madrid", IsCorrect = false }
-                            }
-                        }
-                    },
-                    CountQuestions = 1
-                
+                    Questions = new List<Question>()
                 };
 
-                _context.Quizzes.Add(quiz);
+                Quiz newQuiz = await _generateService.generateQuizDataText(quizRequest.Description, quizRequest.Title, quiz);
+                if (newQuiz.Questions.Count<=0)
+                {
+                    return NoContent();
+                }
+            
+                _context.Quizzes.Add(newQuiz);
                 _context.SaveChanges();
-                return Ok(quiz);
+            
+                try
+                {
+                    newQuiz = await _generateService.generateQuizDataImage(newQuiz, (int)_userContextService.GetUserID, newQuiz.QuizID, quizRequest.Description);
+                    _context.SaveChanges();
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.Message);
+                }
+                return Ok(newQuiz);
             }
             catch (Exception e)
             {
