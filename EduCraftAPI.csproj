@@ -21,6 +21,7 @@
     <PackageReference Include="NPOI" Version="2.7.2" />
     <PackageReference Include="OpenXmlPowerTools" Version="4.5.3.2" />
     <PackageReference Include="PDFsharp" Version="6.1.1" />
+    <PackageReference Include="QuestPDF" Version="2024.12.1" />
     <PackageReference Include="SlideDotNet" Version="0.7.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="Syncfusion.DocIO.Net.Core" Version="27.2.4" />

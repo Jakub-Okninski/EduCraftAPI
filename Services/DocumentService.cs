@@ -1,11 +1,16 @@
-﻿using EduCraftAPI.Entities.Flashcards;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using EduCraftAPI.Entities.Flashcards;
 using EduCraftAPI.Entities.Quiz;
 using NPOI.OpenXmlFormats.Wordprocessing;
 using NPOI.Util;
 using NPOI.XWPF.UserModel;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
-
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using System;
+using System.IO;
 namespace EduCraftAPI.Services
 {
     public interface IDocumentService
@@ -297,8 +302,144 @@ namespace EduCraftAPI.Services
                 return memoryStream.ToArray();
             };
         }
+        private MemoryStream  GenerateFlashcardsStream(Flashcards flashcards)
+        {
+            var folderPath = Path.Combine("UserDataImage", "User" + flashcards.UserID, "Flashcard" + flashcards.FlashcardsID);
+
+            XWPFDocument doc = new XWPFDocument();
+
+            foreach (var card in flashcards.Flashcard)
+            {
+
+                XWPFTable table = doc.CreateTable(1, 2);
+                var ctTable = table.GetCTTbl();
+                var tblProperties = ctTable.AddNewTblPr();
+                tblProperties.jc = new CT_Jc { val = ST_Jc.center };
+
+
+                var tblLayout1 = table.GetCTTbl().tblPr.AddNewTblLayout();
+                tblLayout1.type = ST_TblLayoutType.@fixed;
+                table.SetColumnWidth(0, 3500);
+                table.SetColumnWidth(1, 3500);
+
+                XWPFTableCell titleCell = table.GetRow(0).GetCell(0);
+                titleCell.RemoveParagraph(0);
+                titleCell.SetVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
+
+
+
+                string titleText = card.Title;
+                string[] titleLines = titleText.Split(new[] { "\n" }, StringSplitOptions.None);
+                int titleLinesCount = titleLines.Length;
+                if (titleLinesCount < 1)
+                {
+                    titleLinesCount = 1;
+                    titleLines = new[] { "" };
+                }
+                else
+                {
+                    foreach (var item in titleLines)
+                    {
+                        XWPFParagraph titleParagraph = titleCell.AddParagraph();
+                        titleParagraph.Alignment = NPOI.XWPF.UserModel.ParagraphAlignment.CENTER;
+                        XWPFRun titleRun = titleParagraph.CreateRun();
+                        titleRun.SetText(item);
+                        titleRun.IsBold = true;
+                        titleRun.FontSize = 14;
+                    }
+                }
+                XWPFTableCell descriptionCell = table.GetRow(0).GetCell(1);
+                table.GetRow(0).Height = 3500;
+                descriptionCell.RemoveParagraph(0);
+                descriptionCell.SetVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
+
+                string descriptionText = card.Description;
+                string[] descriptionLines = descriptionText.Split(new[] { "\n" }, StringSplitOptions.None);
+                int descriptionLinesCount = descriptionLines.Length;
+                if (descriptionLinesCount < 1)
+                {
+                    descriptionLinesCount = 1;
+                    descriptionLines = new[] { "" };
+                }
+                else
+                {
+                    foreach (var item in descriptionLines)
+                    {
+                        XWPFParagraph descriptionParagraph = descriptionCell.AddParagraph();
+                        descriptionParagraph.Alignment = NPOI.XWPF.UserModel.ParagraphAlignment.CENTER;
+                        XWPFRun descriptionRun = descriptionParagraph.CreateRun();
+                        descriptionRun.SetText(item);
+                        descriptionRun.IsBold = true;
+                        descriptionRun.FontSize = 14;
+                        descriptionRun.AddBreak();
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(card.FileName))
+                {
+                    string imagePath = Path.Combine(folderPath, card.FileName);
+
+                    if (File.Exists(imagePath))
+                    {
+                        using (FileStream imageStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+                        {
+                            XWPFParagraph titleParagraphPicture = titleCell.AddParagraph();
+
+                            titleParagraphPicture.Alignment = NPOI.XWPF.UserModel.ParagraphAlignment.CENTER;
+                            XWPFRun titleRunPicture = titleParagraphPicture.CreateRun();
+
+                            using (var image = System.Drawing.Image.FromStream(imageStream))
+                            {
+                                int imageWidth = image.Width;
+                                int imageHeight = image.Height;
+                                double aspectRatio = (double)imageWidth / imageHeight;
+                                int newWidth = imageWidth;
+                                int newHeight = imageHeight;
+                                if (imageWidth > imageHeight)
+                                {
+                                    newWidth = 1400;
+                                    newHeight = (int)(newWidth / aspectRatio);
+                                }
+                                else
+                                {
+                                    newHeight = 1400;
+                                    newWidth = (int)(newHeight * aspectRatio);
+                                }
+                                imageStream.Seek(0, SeekOrigin.Begin);
+                                titleRunPicture.AddPicture(
+                                    imageStream,
+                                    (int)PictureType.PNG,
+                                    "logo.png",
+                                    Units.ToEMU(newWidth / 12),
+                                    Units.ToEMU(newHeight / 12)
+                                );
+                            }
+                        }
+
+                    }
+                }
+            }
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                doc.Write(memoryStream);
+                return memoryStream;
+            };
+        }
         public byte[] GenerateFlashcardsAsPdf(Flashcards flashcards)
         {
+            //using (var docxStream = GenerateFlashcardsStream(flashcards))
+            //{
+            //    return ConvertDocxToPdf(docxStream);
+            //}
+
+            QuestPDF.Settings.License = LicenseType.Community;
+
+            var documentNew = new CenteredTableDocument(flashcards);
+
+            // Generowanie tablicy bajtów
+            byte[] pdfBytes = documentNew.GeneratePdf();
+            return pdfBytes;
+
             var folderPath = Path.Combine("UserDataImage", "User" + flashcards.UserID, "Flashcard" + flashcards.FlashcardsID);
 
             PdfDocument document = new PdfDocument();
@@ -454,6 +595,107 @@ namespace EduCraftAPI.Services
                 return stream.ToArray();
             }
         }
+        private byte[] ConvertDocxToPdf(MemoryStream docxStream)
+        {
+            MemoryStream docxCopy = new MemoryStream(docxStream.ToArray());
+            var doc = new Aspose.Words.Document(docxCopy);
+            using (var pdfStream = new MemoryStream())
+            {
+                doc.Save(pdfStream, Aspose.Words.SaveFormat.Pdf);
+                return pdfStream.ToArray();
+            }
+        }
+      
 
+
+    }
+
+    public class CenteredTableDocument : IDocument
+    {
+        public Flashcards _flashcards;
+        public string folderPath;
+        public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
+        public CenteredTableDocument(Flashcards flashcards)
+        {
+            _flashcards = flashcards;
+            folderPath = Path.Combine(Directory.GetCurrentDirectory(),"UserDataImage", "User" + flashcards.UserID, "Flashcard" + flashcards.FlashcardsID);
+        }
+        public void Compose(IDocumentContainer container)
+        {
+            
+            container.Page(page =>
+            {
+                page.Margin(10);
+                page.Size(PageSizes.A4);
+                page.Content().Column(column =>
+                {
+                    // Nagłówek dodawany tylko na pierwszej stronie
+                    column.Item().Element(header =>
+                    {
+                        header.AlignCenter().Text(_flashcards.Title)
+                            .FontSize(20).SemiBold().FontColor(Colors.Black);
+                    });
+
+                    // Tabela lub inna zawartość
+                    column.Item().AlignCenter().Element(ComposeTable);
+                });
+            });
+        }
+
+        void ComposeTable(IContainer container)
+        {
+
+            container.Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.ConstantColumn(220);
+                    columns.ConstantColumn(220);
+                });
+                foreach (var card in _flashcards.Flashcard)
+                {
+
+
+                    if (string.IsNullOrEmpty(card.FileName))
+                    {
+                        table.Cell().Height(250).Padding(10).Border(1).BorderColor(Colors.Grey.Medium).AlignMiddle().AlignCenter().Text(card.Title).FontSize(18).Bold();
+                    }
+                    else
+                    {
+                        string imagePath = Path.Combine(folderPath, card.FileName);
+                        if (File.Exists(imagePath))
+                        {
+                            table.Cell().Height(250).Padding(10).Border(1).BorderColor(Colors.Grey.Medium).Element(container =>
+                            {
+                                container.AlignMiddle().AlignCenter().Column(column =>
+                                {
+                                    // Dodaj tekst na górze
+                                    column.Item().AlignCenter().Text(card.Title).FontSize(18).Bold();
+
+                                    // Dodaj odstęp między tekstem a obrazem
+                                    column.Item().Height(10);
+
+                                    // Dodaj obraz wyśrodkowany względem kontenera
+                                    column.Item().AlignMiddle().AlignCenter().Element(imageContainer =>
+                                    {
+                                        imageContainer
+                                            .Width(150)
+                                            .Image(imagePath, ImageScaling.FitArea); // Dopasowanie obrazu do kontenera
+                                    });
+                                });
+                            });
+                        }
+
+                        else
+                        {
+                            table.Cell().Height(250).Padding(10).Border(1).BorderColor(Colors.Grey.Medium).AlignMiddle().AlignCenter().Text(card.Description).FontSize(18).Bold();
+
+                        }
+
+                    }
+                    table.Cell().Height(250).Padding(10).Border(1).BorderColor(Colors.Grey.Medium).AlignMiddle().AlignCenter().Text(card.Description).FontSize(18).Bold();
+                }
+            });
+        }
     }
 }
