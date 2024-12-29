@@ -5,25 +5,24 @@
 namespace EduCraftAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class d : Migration
+    public partial class card : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "IsBlocked",
-                table: "User",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
+            migrationBuilder.RenameColumn(
+                name: "FlashcardID",
+                table: "Cards",
+                newName: "CardID");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "IsBlocked",
-                table: "User");
+            migrationBuilder.RenameColumn(
+                name: "CardID",
+                table: "Cards",
+                newName: "FlashcardID");
         }
     }
 }

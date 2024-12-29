@@ -439,11 +439,16 @@ namespace EduCraftAPI.Controllers
             {
                 return NoContent();
             }
+            var user = _context.Users.FirstOrDefault(u => u.UserID == (int)_userContextService.GetUserID!);
+            if (user == null)
+            {
+                return NoContent();
+            }
 
             Presentation presentationData = null;
             try
             {
-                presentationData = await _generateService.generatePresentationDataText(request.Description, request.Title);
+                presentationData = await _generateService.generatePresentationDataText(request.Description, request.Title, request.CountElements, user);
             }
             catch (Exception ex)
             {
@@ -489,9 +494,6 @@ namespace EduCraftAPI.Controllers
                 Debug.WriteLine(ex.Message);
 
             }
-
-
-
 
 
             try

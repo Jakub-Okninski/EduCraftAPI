@@ -1,5 +1,6 @@
 ﻿using EduCraftAPI.Entities.Flashcards;
 using EduCraftAPI.Entities.Quiz;
+using EduCraftAPI.Entities.User;
 using EduCraftAPI.Models;
 using Newtonsoft.Json;
 using System.Diagnostics;
@@ -13,13 +14,13 @@ namespace EduCraftAPI.Services
 {
     public interface IGenerateService
     {
-        public Task<Models.Presentation> generatePresentationDataText(string descriptionPresentation, string titleMain);
+        public Task<Models.Presentation> generatePresentationDataText(string descriptionPresentation, string titleMain, int countElements, User user);
         public Task<Presentation> generatePresentationDataImage(Presentation presentation, int UserID, int fileID, string titleMain);
         public Task<String> generateAnswer(string prompt);
         public Task<List<String>> generatePicture(string prompt, int userID);
-        public Task<Quiz> generateQuizDataText(string descriptionQuiz, string titleMain, Quiz quiz);
+        public Task<Quiz> generateQuizDataText(string descriptionQuiz, string titleMain, Quiz quiz, int countElements);
         public Task<Quiz> generateQuizDataImage(Quiz quiz, int UserID, int fileID, string titleMain);
-        public Task<Flashcards> generateFlashcardsDataText(string descriptionFlashcards, string titleMain, Flashcards flashcards);
+        public Task<Flashcards> generateFlashcardsDataText(string descriptionFlashcards, string titleMain, Flashcards flashcards, int countElements);
         public Task<Flashcards> generateFlashcardsDataImage(Flashcards flashcards, int UserID, int fileID, string titleMain);
     }
     public class GenerateService : IGenerateService
@@ -131,7 +132,7 @@ namespace EduCraftAPI.Services
             {
                 model = "dall-e-2",
                 prompt = "Zdjecie na temat: "+ titleMain,
-                n = 1,
+                n = 2,
                 size = "256x256"
             };
 
@@ -163,13 +164,19 @@ namespace EduCraftAPI.Services
                 }
             }
 
+            int actualAddImage = 0;
+
             foreach (var slide in presentation.Slides)
             {
-                if (slide.Id % 2 == 0 && imageUrls.Count>=1) {
+                if (slide.Id % 2 == 0 && imageUrls.Count>=1 && presentation.Slides.Count!=slide.Id) {
 
                     Element element = new Element();
-
-                    element= await _fileService.SaveGeneratedImagePresentation(UserID, fileID, imageUrls[0],element);
+                    if(actualAddImage >= imageUrls.Count)
+                    {
+                        actualAddImage = 0;
+                    }
+                    element= await _fileService.SaveGeneratedImagePresentation(UserID, fileID, imageUrls[actualAddImage],element);
+                    actualAddImage++;
 
                     int newID = 1;
                     foreach (var el in slide.Elements)
@@ -207,12 +214,15 @@ namespace EduCraftAPI.Services
             }
             return presentation;
         }
-        public async Task<Models.Presentation> generatePresentationDataText(string descriptionPresentation, string titleMain)
+        public async Task<Models.Presentation> generatePresentationDataText(string descriptionPresentation, string titleMain, int countElements, User user)
         {
             Presentation presentationData = new Presentation();
             presentationData.Slides = new List<Slide>();
 
-           
+            if(countElements <1 || countElements > 15)
+            {
+                countElements = 10;
+            }
             string apiUrl = "https://api.openai.com/v1/chat/completions";
             Debug.WriteLine(descriptionPresentation);
 
@@ -221,7 +231,7 @@ namespace EduCraftAPI.Services
                 model = "gpt-4o-mini",
                 messages = new[]
                 {
-                new { role = "user", content = $"Utwórz 4 slajdy na podany temat, temat to: {descriptionPresentation}. Wymagana struktura to: tytuł slajdu $$$ zawartość slajdu ###. Maksymalnie trzy zdania zawartości. tytuł slajdu od zawartość slajdu oddziel $$$ a poszczególne slajdy ###, nic poza tym" }
+                new { role = "user", content = $"Utwórz slajdy na podany temat, temat to: {descriptionPresentation}. Maksymalna liczna slajdów to:{countElements}. Wymagana struktura to: tytuł slajdu $$$ zawartość slajdu ###. Maksymalnie trzy zdania zawartości. tytuł slajdu od zawartość slajdu oddziel $$$ a poszczególne slajdy ###, nic poza tym. Przykład schematu: Java $$$ To najpopularniejszy język programowania. ### " }
             },
                 max_tokens = 580,
                 temperature = 1.0,
@@ -279,7 +289,7 @@ namespace EduCraftAPI.Services
 
 
             opMain2.Insert = "\n";
-            opMain.Insert = titleMain;
+            opMain.Insert = CapitalizeFirstLetter(titleMain);
 
             opMain2.Attributes = new Attributes() { Align = "center", Header = 1};
 
@@ -288,6 +298,39 @@ namespace EduCraftAPI.Services
 
 
             mainSlide.Elements.Add(elementMain);
+
+
+            Element elementMain2 = new Element();
+            elementMain2.Id = 2;
+            elementMain2.Type = "text";
+            elementMain2.Position = new Position()
+            {
+                Top = 480,
+                Left = 600,
+            };
+            elementMain2.Size = new Size()
+            {
+                Width = 375,
+                Height = 40,
+            };
+
+            elementMain2.Ops = new List<Op>();
+            Op opmainSlide = new Op();
+            Op opmainSlide2 = new Op();
+
+
+            opmainSlide.Insert = "Autor: " + user?.FirstName + " " + user?.LastName;
+            opmainSlide2.Insert = "\n";
+
+            opmainSlide2.Attributes = new Attributes() { Align = "center", Bold = true };
+
+            elementMain2.Ops.Add(opmainSlide);
+            elementMain2.Ops.Add(opmainSlide2);
+
+            mainSlide.Elements.Add(elementMain2);
+
+
+
             presentationData.Slides.Add(mainSlide);
 
 
@@ -369,20 +412,92 @@ namespace EduCraftAPI.Services
                 }
             }
 
+
+
+            Slide endSlide = new Slide();
+            endSlide.Id = slideID;
+            endSlide.Title = "Slajd " + slideID;
+            endSlide.Elements = new List<Element>();
+
+            Element elementEnd = new Element();
+            elementEnd.Id = 1;
+            elementEnd.Type = "text";
+            elementEnd.Position = new Position()
+            {
+                Top = 210,
+                Left = 337,
+            };
+            elementEnd.Size = new Size()
+            {
+                Width = 325,
+                Height = 91,
+            };
+
+            elementEnd.Ops = new List<Op>();
+            Op opEnd = new Op();
+            Op opEnd2 = new Op();
+
+
+            opEnd.Insert = "Dziękuję za uwagę!";
+            opEnd2.Insert = "\n";
+
+            opEnd2.Attributes = new Attributes() { Align = "center", Header = 1, Bold = true };
+
+            elementEnd.Ops.Add(opEnd);
+            elementEnd.Ops.Add(opEnd2);
+
+            endSlide.Elements.Add(elementEnd);
+
+
+            Element elementEnd2 = new Element();
+            elementEnd2.Id = 2;
+            elementEnd2.Type = "text";
+            elementEnd2.Position = new Position()
+            {
+                Top = 480,
+                Left = 600,
+            };
+            elementEnd2.Size = new Size()
+            {
+                Width = 375,
+                Height = 40,
+            };
+
+            elementEnd2.Ops = new List<Op>();
+            Op opEndAuthoEnd = new Op();
+            Op opEnd2AuthoEnd = new Op();
+
+
+            opEndAuthoEnd.Insert = "Autor: "+user?.FirstName+ " "+user?.LastName;
+            opEnd2AuthoEnd.Insert = "\n";
+
+            opEnd2AuthoEnd.Attributes = new Attributes() { Align = "center", Bold = true };
+
+            elementEnd2.Ops.Add(opEndAuthoEnd);
+            elementEnd2.Ops.Add(opEnd2AuthoEnd);
+
+            endSlide.Elements.Add(elementEnd2);
+
+            presentationData.Slides.Add(endSlide);
+
             return presentationData;
          
         }
-        public async Task<Quiz> generateQuizDataText(string descriptionQuiz, string titleMain,  Quiz quiz)
+        public async Task<Quiz> generateQuizDataText(string descriptionQuiz, string titleMain,  Quiz quiz, int countElements)
         {
             string apiUrl = "https://api.openai.com/v1/chat/completions";
             Debug.WriteLine(descriptionQuiz);
+            if (countElements < 1 || countElements > 15)
+            {
+                countElements = 10;
+            }
 
             var requestBody = new
             {
                 model = "gpt-4o-mini",
                 messages = new[]
                 {
-                new { role = "user", content = $"Utwórz 2 pytania do quizu na podany temat, temat to: {descriptionQuiz}. Maksymalnie po jednym zdaniu na pytanie i odpowiedzi. pytanie od odpowiedzi oddziel $$$, poszczególne pytania ### a poszczególne odpowiedzi oddziel &&&. Jeśli jest poprawna dodaj odp+, nic poza tym. Przykład schematu:  Ile to 2+2? $$$ 3 &&&odp+ 4  &&& 5 ###. niczego nie numeruj" }
+                new { role = "user", content = $"Utwórz pytania do quizu na podany temat, temat to: {descriptionQuiz}. Maksymalna liczba pytań to: {countElements}. Maksymalnie po jednym zdaniu na pytanie i odpowiedzi. pytanie od odpowiedzi oddziel $$$, poszczególne pytania ### a poszczególne odpowiedzi oddziel &&&. Jeśli jest poprawna dodaj odp+, nic poza tym. Przykład schematu:  Ile to 2+2? $$$ 3 &&&odp+ 4  &&& 5 ###. niczego nie numeruj" }
             },
                 max_tokens = 300,
                 temperature = 1.0,
@@ -468,7 +583,7 @@ namespace EduCraftAPI.Services
             {
                 model = "dall-e-2",
                 prompt = "Zdjecie do quizu na temat: " + titleMain,
-                n = 1,
+                n = 2,
                 size = "256x256"
             };
 
@@ -493,28 +608,38 @@ namespace EduCraftAPI.Services
                 } 
             }
             int index = 1;
+            int actualAddImage = 0;
             foreach (var question in quiz.Questions)
             {
                 if (index % 2 == 0 && imageUrls.Count >= 1)
                 {
-                    string filename = await _fileService.SaveGeneratedImageQuizAndFlashcard(UserID, "Quiz"+ fileID, imageUrls[0]);
+
+                    if (actualAddImage >= imageUrls.Count)
+                    {
+                        actualAddImage = 0;
+                    }
+                    string filename = await _fileService.SaveGeneratedImageQuizAndFlashcard(UserID, "Quiz"+ fileID, imageUrls[actualAddImage]);
+                    actualAddImage++;
                     question.FileName = filename;
                 }
                 index++;
             }
             return quiz;
         }
-        public async Task<Flashcards> generateFlashcardsDataText(string descriptionFlashcards, string titleMain, Flashcards flashcards)
+        public async Task<Flashcards> generateFlashcardsDataText(string descriptionFlashcards, string titleMain, Flashcards flashcards, int countElements)
         {
             string apiUrl = "https://api.openai.com/v1/chat/completions";
             Debug.WriteLine(descriptionFlashcards);
-
+            if (countElements < 1 || countElements > 15)
+            {
+                countElements = 10;
+            }
             var requestBody = new
             {
                 model = "gpt-4o-mini",
                 messages = new[]
                 {
-                new { role = "user", content = $"Utwórz 2 fiszki na podany temat, temat to: {descriptionFlashcards}. Hasło od Opisu oddziel &&& a poszczególne fiszki oddziel ###, nic poza tym. Maksymalnie po jednym zdaniu na hasło i opis. Przykład: Java &&& Język programowania ###" }
+                new { role = "user", content = $"Utwórz fiszki na podany temat, temat to: {descriptionFlashcards}. Maksymalna liczba fiszek to: {countElements}. Hasło od Opisu oddziel &&& a poszczególne fiszki oddziel ###, nic poza tym. Maksymalnie po jednym zdaniu na hasło i opis. Przykład: Java &&& Język programowania ###" }
             },
                 max_tokens = 200,
                 temperature = 1.0,
@@ -574,7 +699,7 @@ namespace EduCraftAPI.Services
             {
                 model = "dall-e-2",
                 prompt = "Zdjecie do fiszki na temat: " + titleMain,
-                n = 1,
+                n = 2,
                 size = "256x256"
             };
 
@@ -599,16 +724,34 @@ namespace EduCraftAPI.Services
                 }
             }
             int index = 1;
+            int actualAddImage = 0;
             foreach (var card in flashcards.Flashcard)
             {
                 if (index % 2 == 0 && imageUrls.Count >= 1)
                 {
-                    string filename = await _fileService.SaveGeneratedImageQuizAndFlashcard(UserID, "Flashcard" + fileID, imageUrls[0]);
+                    if (actualAddImage >= imageUrls.Count)
+                    {
+                        actualAddImage = 0;
+                    }
+                    string filename = await _fileService.SaveGeneratedImageQuizAndFlashcard(UserID, "Flashcard" + fileID, imageUrls[actualAddImage]);
+                    actualAddImage++;
                     card.FileName = filename;
                 }
                 index++;
             }
             return flashcards;
+        }
+        public string CapitalizeFirstLetter(string sentence)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(sentence))
+                    return sentence;
+                return sentence.Substring(0, 1).ToUpper() + sentence.Substring(1);
+            }
+            catch (Exception ex) {
+                return sentence;
+            }  
         }
 
     }

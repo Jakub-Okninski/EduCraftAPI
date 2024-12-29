@@ -328,7 +328,7 @@ namespace EduCraftAPI.Controllers
                     Flashcard = new List<Flashcard>()
                 };
 
-                Flashcards newFlashcards = await _generateService.generateFlashcardsDataText(createFlashcardsDto.Description, createFlashcardsDto.Title, flashcards);
+                Flashcards newFlashcards = await _generateService.generateFlashcardsDataText(createFlashcardsDto.Description, createFlashcardsDto.Title, flashcards, createFlashcardsDto.CountElements);
                 if (newFlashcards.Flashcard.Count <= 0)
                 {
                     return NoContent();

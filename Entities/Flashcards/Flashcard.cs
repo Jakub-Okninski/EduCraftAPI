@@ -5,6 +5,7 @@ namespace EduCraftAPI.Entities.Flashcards
 {
     public class Flashcard
     {
+        [Column("CardID")]
         public int FlashcardID { get; set; }
         public string Title { get; set; }
         public string? FileName { get; set; }

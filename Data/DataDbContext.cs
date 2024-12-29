@@ -25,15 +25,15 @@ namespace EduCraftAPI.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Quiz>().ToTable("Quiz");
-            modelBuilder.Entity<Question>().ToTable("Question");
-            modelBuilder.Entity<Answer>().ToTable("Answer");
-            modelBuilder.Entity<Role>().ToTable("Role");
-            modelBuilder.Entity<User>().ToTable("User");
-            modelBuilder.Entity<Presentations>().ToTable("Presentation");
+            modelBuilder.Entity<Quiz>().ToTable("Quizzes");
+            modelBuilder.Entity<Question>().ToTable("Questions");
+            modelBuilder.Entity<Answer>().ToTable("Answers");
+            modelBuilder.Entity<Role>().ToTable("Roles");
+            modelBuilder.Entity<User>().ToTable("Users");
+            modelBuilder.Entity<Presentations>().ToTable("Presentations");
             modelBuilder.Entity<Flashcards>().ToTable("Flashcards");
-            modelBuilder.Entity<Flashcard>().ToTable("Flashcard");
-            modelBuilder.Entity<Category>().ToTable("Category");
+            modelBuilder.Entity<Flashcard>().ToTable("Cards");
+            modelBuilder.Entity<Category>().ToTable("Categories");
 
             base.OnModelCreating(modelBuilder);
 

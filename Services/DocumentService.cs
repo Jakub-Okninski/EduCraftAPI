@@ -1,16 +1,13 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using EduCraftAPI.Entities.Flashcards;
+﻿using EduCraftAPI.Entities.Flashcards;
 using EduCraftAPI.Entities.Quiz;
 using NPOI.OpenXmlFormats.Wordprocessing;
 using NPOI.Util;
 using NPOI.XWPF.UserModel;
 using PdfSharp.Drawing;
-using PdfSharp.Pdf;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using System;
-using System.IO;
+
 namespace EduCraftAPI.Services
 {
     public interface IDocumentService
@@ -302,312 +299,13 @@ namespace EduCraftAPI.Services
                 return memoryStream.ToArray();
             };
         }
-        private MemoryStream  GenerateFlashcardsStream(Flashcards flashcards)
-        {
-            var folderPath = Path.Combine("UserDataImage", "User" + flashcards.UserID, "Flashcard" + flashcards.FlashcardsID);
-
-            XWPFDocument doc = new XWPFDocument();
-
-            foreach (var card in flashcards.Flashcard)
-            {
-
-                XWPFTable table = doc.CreateTable(1, 2);
-                var ctTable = table.GetCTTbl();
-                var tblProperties = ctTable.AddNewTblPr();
-                tblProperties.jc = new CT_Jc { val = ST_Jc.center };
-
-
-                var tblLayout1 = table.GetCTTbl().tblPr.AddNewTblLayout();
-                tblLayout1.type = ST_TblLayoutType.@fixed;
-                table.SetColumnWidth(0, 3500);
-                table.SetColumnWidth(1, 3500);
-
-                XWPFTableCell titleCell = table.GetRow(0).GetCell(0);
-                titleCell.RemoveParagraph(0);
-                titleCell.SetVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
-
-
-
-                string titleText = card.Title;
-                string[] titleLines = titleText.Split(new[] { "\n" }, StringSplitOptions.None);
-                int titleLinesCount = titleLines.Length;
-                if (titleLinesCount < 1)
-                {
-                    titleLinesCount = 1;
-                    titleLines = new[] { "" };
-                }
-                else
-                {
-                    foreach (var item in titleLines)
-                    {
-                        XWPFParagraph titleParagraph = titleCell.AddParagraph();
-                        titleParagraph.Alignment = NPOI.XWPF.UserModel.ParagraphAlignment.CENTER;
-                        XWPFRun titleRun = titleParagraph.CreateRun();
-                        titleRun.SetText(item);
-                        titleRun.IsBold = true;
-                        titleRun.FontSize = 14;
-                    }
-                }
-                XWPFTableCell descriptionCell = table.GetRow(0).GetCell(1);
-                table.GetRow(0).Height = 3500;
-                descriptionCell.RemoveParagraph(0);
-                descriptionCell.SetVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
-
-                string descriptionText = card.Description;
-                string[] descriptionLines = descriptionText.Split(new[] { "\n" }, StringSplitOptions.None);
-                int descriptionLinesCount = descriptionLines.Length;
-                if (descriptionLinesCount < 1)
-                {
-                    descriptionLinesCount = 1;
-                    descriptionLines = new[] { "" };
-                }
-                else
-                {
-                    foreach (var item in descriptionLines)
-                    {
-                        XWPFParagraph descriptionParagraph = descriptionCell.AddParagraph();
-                        descriptionParagraph.Alignment = NPOI.XWPF.UserModel.ParagraphAlignment.CENTER;
-                        XWPFRun descriptionRun = descriptionParagraph.CreateRun();
-                        descriptionRun.SetText(item);
-                        descriptionRun.IsBold = true;
-                        descriptionRun.FontSize = 14;
-                        descriptionRun.AddBreak();
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(card.FileName))
-                {
-                    string imagePath = Path.Combine(folderPath, card.FileName);
-
-                    if (File.Exists(imagePath))
-                    {
-                        using (FileStream imageStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
-                        {
-                            XWPFParagraph titleParagraphPicture = titleCell.AddParagraph();
-
-                            titleParagraphPicture.Alignment = NPOI.XWPF.UserModel.ParagraphAlignment.CENTER;
-                            XWPFRun titleRunPicture = titleParagraphPicture.CreateRun();
-
-                            using (var image = System.Drawing.Image.FromStream(imageStream))
-                            {
-                                int imageWidth = image.Width;
-                                int imageHeight = image.Height;
-                                double aspectRatio = (double)imageWidth / imageHeight;
-                                int newWidth = imageWidth;
-                                int newHeight = imageHeight;
-                                if (imageWidth > imageHeight)
-                                {
-                                    newWidth = 1400;
-                                    newHeight = (int)(newWidth / aspectRatio);
-                                }
-                                else
-                                {
-                                    newHeight = 1400;
-                                    newWidth = (int)(newHeight * aspectRatio);
-                                }
-                                imageStream.Seek(0, SeekOrigin.Begin);
-                                titleRunPicture.AddPicture(
-                                    imageStream,
-                                    (int)PictureType.PNG,
-                                    "logo.png",
-                                    Units.ToEMU(newWidth / 12),
-                                    Units.ToEMU(newHeight / 12)
-                                );
-                            }
-                        }
-
-                    }
-                }
-            }
-            using (MemoryStream memoryStream = new MemoryStream())
-            {
-                doc.Write(memoryStream);
-                return memoryStream;
-            };
-        }
         public byte[] GenerateFlashcardsAsPdf(Flashcards flashcards)
         {
-            //using (var docxStream = GenerateFlashcardsStream(flashcards))
-            //{
-            //    return ConvertDocxToPdf(docxStream);
-            //}
-
             QuestPDF.Settings.License = LicenseType.Community;
-
             var documentNew = new CenteredTableDocument(flashcards);
-
-            // Generowanie tablicy bajtów
             byte[] pdfBytes = documentNew.GeneratePdf();
             return pdfBytes;
-
-            var folderPath = Path.Combine("UserDataImage", "User" + flashcards.UserID, "Flashcard" + flashcards.FlashcardsID);
-
-            PdfDocument document = new PdfDocument();
-            PdfPage page = document.AddPage();
-            XGraphics gfx = XGraphics.FromPdfPage(page);
-
-            XFont titleFont = new XFont("Arial", 12);
-            XFont descriptionFont = new XFont("Arial", 12);
-
-            double cellWidth = 200;
-            double cellHeight = 200;
-            double xPosition = 100;
-            double yPosition = 50;
-            double rowHeight = 200;
-
-            double marginBottom = 5;
-            double pageWidth = page.Width;
-            double pageHeight = page.Height;
-
-            double maxImageWidth = cellWidth * 0.6;
-            double maxImageHeight = rowHeight * 0.6;
-            double imageHolderHeight = rowHeight * 0.6;
-
-            foreach (var card in flashcards.Flashcard)
-            {
-                gfx.DrawRectangle(XPens.Black, xPosition, yPosition, cellWidth, rowHeight); 
-                gfx.DrawRectangle(XPens.Black, xPosition + cellWidth, yPosition, cellWidth, rowHeight);
-
-
-                string text = card.Description;
-
-                string[] lines = text.Split(new[] { "\n" }, StringSplitOptions.None);
-                int count = lines.Length;
-                if (count <1) {
-                    count = 1;
-                    continue;
-                }
-                var rect = new XRect(xPosition + cellWidth, yPosition, cellWidth, rowHeight);
-
-                double lineHeight = descriptionFont.Height;
-
-                double totalTextHeight = count * lineHeight;
-
-                double currentY = rect.Y + (rect.Height - totalTextHeight) / 2;
-
-                foreach (string line in lines)
-                {
-                    gfx.DrawString(
-                        line,
-                        descriptionFont,
-                        XBrushes.Black,
-                        new XRect(rect.X, currentY, rect.Width, lineHeight),
-                        XStringFormats.Center
-                    );
-
-                    currentY += lineHeight;
-                }
-
-
-                bool imageIsAdded = false;
-
-                if (!string.IsNullOrEmpty(card.FileName))
-                {
-                    string imagePath = Path.Combine(folderPath, card.FileName);
-                    if (File.Exists(imagePath))
-                    {
-                        XImage image = XImage.FromFile(imagePath);
-                        double aspectRatio = image.PixelWidth / (double)image.PixelHeight;
-                        double newWidth = maxImageWidth;
-                        double newHeight = newWidth / aspectRatio;
-                        if (newHeight > maxImageHeight)
-                        {
-                            newHeight = maxImageHeight;
-                            newWidth = newHeight * aspectRatio;
-                        }
-                        else if (newWidth > maxImageWidth)
-                        {
-                            newWidth = maxImageWidth;
-                            newHeight = newHeight * aspectRatio;
-                        }
-                        double imageXPosition = xPosition + (cellWidth - newWidth) / 2;
-                        double imageYPosition = yPosition + rowHeight * 0.3 + (imageHolderHeight - newHeight) / 2;
-                        gfx.DrawImage(image, imageXPosition, imageYPosition, newWidth, newHeight);
-                        imageIsAdded = true;
-                    }
-                }
-
-                if (!imageIsAdded)
-                {
-                    string titleText = card.Title;
-                    string[] titleLines = titleText.Split(new[] { "\n" }, StringSplitOptions.None);
-                    int titleLineCount = titleLines.Length;
-                    if (titleLineCount < 1)
-                    {
-                        titleLineCount = 1;
-                        continue;
-                    }
-                    var titleRect = new XRect(xPosition, yPosition, cellWidth, rowHeight);
-                    double titleLineHeight = titleFont.Height;
-                    double totalTitleHeight = titleLineCount * titleLineHeight;
-                    double titleStartY = titleRect.Y + (titleRect.Height - totalTitleHeight) / 2;
-                    foreach (string titleLine in titleLines)
-                    {
-                        gfx.DrawString(
-                            titleLine,
-                            titleFont,
-                            XBrushes.Black,
-                            new XRect(titleRect.X, titleStartY, titleRect.Width, titleLineHeight),
-                            XStringFormats.Center
-                        );
-                        titleStartY += titleLineHeight;
-                    }
-                }
-                else
-                {
-                    string titleText = card.Title;
-                    string[] titleLines = titleText.Split(new[] { "\n" }, StringSplitOptions.None);
-                    int titleLineCount = titleLines.Length;
-                    if (titleLineCount < 1)
-                    {
-                        titleLineCount = 1;
-                        continue;
-                    }
-                    var titleRect = new XRect(xPosition, yPosition, cellWidth, rowHeight * 0.3);
-                    double titleLineHeight = titleFont.Height;
-                    double totalTitleHeight = titleLineCount * titleLineHeight;
-                    double titleStartY = titleRect.Y + (titleRect.Height - totalTitleHeight) / 2;
-                    foreach (string titleLine in titleLines)
-                    {
-                        gfx.DrawString(
-                            titleLine,
-                            titleFont,
-                            XBrushes.Black,
-                            new XRect(titleRect.X, titleStartY, titleRect.Width, titleLineHeight),
-                            XStringFormats.Center
-                        );
-                        titleStartY += titleLineHeight;
-                    }
-
-                }
-
-                yPosition += rowHeight + 10;
-                if (yPosition + rowHeight > pageHeight - marginBottom)
-                {
-                    page = document.AddPage();
-                    gfx = XGraphics.FromPdfPage(page);
-                    yPosition = 50;
-                }
-            }
-            using (MemoryStream stream = new MemoryStream())
-            {
-                document.Save(stream);
-                return stream.ToArray();
-            }
         }
-        private byte[] ConvertDocxToPdf(MemoryStream docxStream)
-        {
-            MemoryStream docxCopy = new MemoryStream(docxStream.ToArray());
-            var doc = new Aspose.Words.Document(docxCopy);
-            using (var pdfStream = new MemoryStream())
-            {
-                doc.Save(pdfStream, Aspose.Words.SaveFormat.Pdf);
-                return pdfStream.ToArray();
-            }
-        }
-      
-
-
     }
 
     public class CenteredTableDocument : IDocument
@@ -629,19 +327,16 @@ namespace EduCraftAPI.Services
                 page.Size(PageSizes.A4);
                 page.Content().Column(column =>
                 {
-                    // Nagłówek dodawany tylko na pierwszej stronie
                     column.Item().Element(header =>
                     {
                         header.AlignCenter().Text(_flashcards.Title)
                             .FontSize(20).SemiBold().FontColor(Colors.Black);
                     });
 
-                    // Tabela lub inna zawartość
                     column.Item().AlignCenter().Element(ComposeTable);
                 });
             });
         }
-
         void ComposeTable(IContainer container)
         {
 
@@ -669,18 +364,15 @@ namespace EduCraftAPI.Services
                             {
                                 container.AlignMiddle().AlignCenter().Column(column =>
                                 {
-                                    // Dodaj tekst na górze
                                     column.Item().AlignCenter().Text(card.Title).FontSize(18).Bold();
 
-                                    // Dodaj odstęp między tekstem a obrazem
                                     column.Item().Height(10);
 
-                                    // Dodaj obraz wyśrodkowany względem kontenera
                                     column.Item().AlignMiddle().AlignCenter().Element(imageContainer =>
                                     {
                                         imageContainer
                                             .Width(150)
-                                            .Image(imagePath, ImageScaling.FitArea); // Dopasowanie obrazu do kontenera
+                                            .Image(imagePath, ImageScaling.FitArea); 
                                     });
                                 });
                             });

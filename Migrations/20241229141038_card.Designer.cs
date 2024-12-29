@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduCraftAPI.Migrations
 {
     [DbContext(typeof(DataDbContext))]
-    [Migration("20241121201437_ooo")]
-    partial class ooo
+    [Migration("20241229141038_card")]
+    partial class card
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,14 +39,15 @@ namespace EduCraftAPI.Migrations
 
                     b.HasKey("CategoryID");
 
-                    b.ToTable("Category", (string)null);
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Flashcards.Flashcard", b =>
                 {
                     b.Property<int>("FlashcardID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("CardID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FlashcardID"));
 
@@ -68,7 +69,7 @@ namespace EduCraftAPI.Migrations
 
                     b.HasIndex("FlashcardsID");
 
-                    b.ToTable("Flashcard", (string)null);
+                    b.ToTable("Cards", (string)null);
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Flashcards.Flashcards", b =>
@@ -81,6 +82,9 @@ namespace EduCraftAPI.Migrations
 
                     b.Property<int>("CategoryID")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsPublic")
                         .HasColumnType("bit");
@@ -131,7 +135,7 @@ namespace EduCraftAPI.Migrations
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("Presentation", (string)null);
+                    b.ToTable("Presentations", (string)null);
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Quiz.Answer", b =>
@@ -156,7 +160,7 @@ namespace EduCraftAPI.Migrations
 
                     b.HasIndex("QuestionID");
 
-                    b.ToTable("Answer", (string)null);
+                    b.ToTable("Answers", (string)null);
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Quiz.Question", b =>
@@ -181,7 +185,7 @@ namespace EduCraftAPI.Migrations
 
                     b.HasIndex("QuizID");
 
-                    b.ToTable("Question", (string)null);
+                    b.ToTable("Questions", (string)null);
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Quiz.Quiz", b =>
@@ -195,12 +199,21 @@ namespace EduCraftAPI.Migrations
                     b.Property<int>("CategoryID")
                         .HasColumnType("int");
 
+                    b.Property<int>("CountQuestions")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsPublic")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("RandomQuestion")
+                        .HasColumnType("bit");
 
                     b.Property<int>("UserID")
                         .HasColumnType("int");
@@ -211,7 +224,7 @@ namespace EduCraftAPI.Migrations
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("Quiz", (string)null);
+                    b.ToTable("Quizzes", (string)null);
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.User.Role", b =>
@@ -228,7 +241,7 @@ namespace EduCraftAPI.Migrations
 
                     b.HasKey("RoleID");
 
-                    b.ToTable("Role", (string)null);
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.User.User", b =>
@@ -246,6 +259,9 @@ namespace EduCraftAPI.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -265,7 +281,7 @@ namespace EduCraftAPI.Migrations
 
                     b.HasIndex("RoleID");
 
-                    b.ToTable("User", (string)null);
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("EduCraftAPI.Entities.Flashcards.Flashcard", b =>

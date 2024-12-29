@@ -506,7 +506,7 @@ namespace EduCraftAPI.Controllers
                     Questions = new List<Question>()
                 };
 
-                Quiz newQuiz = await _generateService.generateQuizDataText(quizRequest.Description, quizRequest.Title, quiz);
+                Quiz newQuiz = await _generateService.generateQuizDataText(quizRequest.Description, quizRequest.Title, quiz, quizRequest.CountElements);
                 if (newQuiz.Questions.Count<=0)
                 {
                     return NoContent();

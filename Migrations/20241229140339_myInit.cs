@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EduCraftAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class initialmigrationnew : Migration
+    public partial class myInit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Category",
+                name: "Categories",
                 columns: table => new
                 {
                     CategoryID = table.Column<int>(type: "int", nullable: false)
@@ -21,11 +21,11 @@ namespace EduCraftAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Category", x => x.CategoryID);
+                    table.PrimaryKey("PK_Categories", x => x.CategoryID);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Role",
+                name: "Roles",
                 columns: table => new
                 {
                     RoleID = table.Column<int>(type: "int", nullable: false)
@@ -34,11 +34,11 @@ namespace EduCraftAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Role", x => x.RoleID);
+                    table.PrimaryKey("PK_Roles", x => x.RoleID);
                 });
 
             migrationBuilder.CreateTable(
-                name: "User",
+                name: "Users",
                 columns: table => new
                 {
                     UserID = table.Column<int>(type: "int", nullable: false)
@@ -47,15 +47,16 @@ namespace EduCraftAPI.Migrations
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RoleID = table.Column<int>(type: "int", nullable: false)
+                    RoleID = table.Column<int>(type: "int", nullable: false),
+                    IsBlocked = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_User", x => x.UserID);
+                    table.PrimaryKey("PK_Users", x => x.UserID);
                     table.ForeignKey(
-                        name: "FK_User_Role_RoleID",
+                        name: "FK_Users_Roles_RoleID",
                         column: x => x.RoleID,
-                        principalTable: "Role",
+                        principalTable: "Roles",
                         principalColumn: "RoleID",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -67,21 +68,30 @@ namespace EduCraftAPI.Migrations
                     FlashcardsID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserID = table.Column<int>(type: "int", nullable: false)
+                    CreationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserID = table.Column<int>(type: "int", nullable: false),
+                    IsPublic = table.Column<bool>(type: "bit", nullable: false),
+                    CategoryID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Flashcards", x => x.FlashcardsID);
                     table.ForeignKey(
-                        name: "FK_Flashcards_User_UserID",
+                        name: "FK_Flashcards_Categories_CategoryID",
+                        column: x => x.CategoryID,
+                        principalTable: "Categories",
+                        principalColumn: "CategoryID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Flashcards_Users_UserID",
                         column: x => x.UserID,
-                        principalTable: "User",
+                        principalTable: "Users",
                         principalColumn: "UserID",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Presentation",
+                name: "Presentations",
                 columns: table => new
                 {
                     PresentationsID = table.Column<int>(type: "int", nullable: false)
@@ -94,43 +104,54 @@ namespace EduCraftAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Presentation", x => x.PresentationsID);
+                    table.PrimaryKey("PK_Presentations", x => x.PresentationsID);
                     table.ForeignKey(
-                        name: "FK_Presentation_Category_CategoryID",
+                        name: "FK_Presentations_Categories_CategoryID",
                         column: x => x.CategoryID,
-                        principalTable: "Category",
+                        principalTable: "Categories",
                         principalColumn: "CategoryID",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Presentation_User_UserID",
+                        name: "FK_Presentations_Users_UserID",
                         column: x => x.UserID,
-                        principalTable: "User",
+                        principalTable: "Users",
                         principalColumn: "UserID",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Quiz",
+                name: "Quizzes",
                 columns: table => new
                 {
                     QuizID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserID = table.Column<int>(type: "int", nullable: false)
+                    CreationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserID = table.Column<int>(type: "int", nullable: false),
+                    IsPublic = table.Column<bool>(type: "bit", nullable: false),
+                    RandomQuestion = table.Column<bool>(type: "bit", nullable: false),
+                    CountQuestions = table.Column<int>(type: "int", nullable: false),
+                    CategoryID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Quiz", x => x.QuizID);
+                    table.PrimaryKey("PK_Quizzes", x => x.QuizID);
                     table.ForeignKey(
-                        name: "FK_Quiz_User_UserID",
+                        name: "FK_Quizzes_Categories_CategoryID",
+                        column: x => x.CategoryID,
+                        principalTable: "Categories",
+                        principalColumn: "CategoryID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Quizzes_Users_UserID",
                         column: x => x.UserID,
-                        principalTable: "User",
+                        principalTable: "Users",
                         principalColumn: "UserID",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Flashcard",
+                name: "Cards",
                 columns: table => new
                 {
                     FlashcardID = table.Column<int>(type: "int", nullable: false)
@@ -142,9 +163,9 @@ namespace EduCraftAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Flashcard", x => x.FlashcardID);
+                    table.PrimaryKey("PK_Cards", x => x.FlashcardID);
                     table.ForeignKey(
-                        name: "FK_Flashcard_Flashcards_FlashcardsID",
+                        name: "FK_Cards_Flashcards_FlashcardsID",
                         column: x => x.FlashcardsID,
                         principalTable: "Flashcards",
                         principalColumn: "FlashcardsID",
@@ -152,7 +173,7 @@ namespace EduCraftAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Question",
+                name: "Questions",
                 columns: table => new
                 {
                     QuestionID = table.Column<int>(type: "int", nullable: false)
@@ -163,17 +184,17 @@ namespace EduCraftAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Question", x => x.QuestionID);
+                    table.PrimaryKey("PK_Questions", x => x.QuestionID);
                     table.ForeignKey(
-                        name: "FK_Question_Quiz_QuizID",
+                        name: "FK_Questions_Quizzes_QuizID",
                         column: x => x.QuizID,
-                        principalTable: "Quiz",
+                        principalTable: "Quizzes",
                         principalColumn: "QuizID",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Answer",
+                name: "Answers",
                 columns: table => new
                 {
                     AnswerID = table.Column<int>(type: "int", nullable: false)
@@ -184,24 +205,29 @@ namespace EduCraftAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Answer", x => x.AnswerID);
+                    table.PrimaryKey("PK_Answers", x => x.AnswerID);
                     table.ForeignKey(
-                        name: "FK_Answer_Question_QuestionID",
+                        name: "FK_Answers_Questions_QuestionID",
                         column: x => x.QuestionID,
-                        principalTable: "Question",
+                        principalTable: "Questions",
                         principalColumn: "QuestionID",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Answer_QuestionID",
-                table: "Answer",
+                name: "IX_Answers_QuestionID",
+                table: "Answers",
                 column: "QuestionID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Flashcard_FlashcardsID",
-                table: "Flashcard",
+                name: "IX_Cards_FlashcardsID",
+                table: "Cards",
                 column: "FlashcardsID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Flashcards_CategoryID",
+                table: "Flashcards",
+                column: "CategoryID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Flashcards_UserID",
@@ -209,34 +235,39 @@ namespace EduCraftAPI.Migrations
                 column: "UserID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Presentation_CategoryID",
-                table: "Presentation",
+                name: "IX_Presentations_CategoryID",
+                table: "Presentations",
                 column: "CategoryID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Presentation_UserID",
-                table: "Presentation",
+                name: "IX_Presentations_UserID",
+                table: "Presentations",
                 column: "UserID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Question_QuizID",
-                table: "Question",
+                name: "IX_Questions_QuizID",
+                table: "Questions",
                 column: "QuizID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Quiz_UserID",
-                table: "Quiz",
+                name: "IX_Quizzes_CategoryID",
+                table: "Quizzes",
+                column: "CategoryID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Quizzes_UserID",
+                table: "Quizzes",
                 column: "UserID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_User_Email",
-                table: "User",
+                name: "IX_Users_Email",
+                table: "Users",
                 column: "Email",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_User_RoleID",
-                table: "User",
+                name: "IX_Users_RoleID",
+                table: "Users",
                 column: "RoleID");
         }
 
@@ -244,31 +275,31 @@ namespace EduCraftAPI.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Answer");
+                name: "Answers");
 
             migrationBuilder.DropTable(
-                name: "Flashcard");
+                name: "Cards");
 
             migrationBuilder.DropTable(
-                name: "Presentation");
+                name: "Presentations");
 
             migrationBuilder.DropTable(
-                name: "Question");
+                name: "Questions");
 
             migrationBuilder.DropTable(
                 name: "Flashcards");
 
             migrationBuilder.DropTable(
-                name: "Category");
+                name: "Quizzes");
 
             migrationBuilder.DropTable(
-                name: "Quiz");
+                name: "Categories");
 
             migrationBuilder.DropTable(
-                name: "User");
+                name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Role");
+                name: "Roles");
         }
     }
 }
