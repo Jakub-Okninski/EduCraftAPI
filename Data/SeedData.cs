@@ -14,15 +14,26 @@ namespace EduCraftAPI.Entities{
                 if (!context.Category.Any())
                 {
                 context.Category.AddRange(
-                     new Category.Category
-                     {
-                         Name = "IT"
-                     },
-                     new Category.Category
-                     {
-                         Name = "Math"
-                     }
-
+                    new Category.Category { Name = "Informatyka" },
+                    new Category.Category { Name = "Programowanie" },
+                    new Category.Category { Name = "Matematyka" },
+                    new Category.Category { Name = "Fizyka" },
+                    new Category.Category { Name = "Języki Obce" },
+                    new Category.Category { Name = "Angielski" },
+                    new Category.Category { Name = "Zarządzanie Projektami" },
+                    new Category.Category { Name = "Inne" },
+                    new Category.Category { Name = "Historia" },
+                    new Category.Category { Name = "Geografia" },
+                    new Category.Category { Name = "Biologia" },
+                    new Category.Category { Name = "Chemia" },
+                    new Category.Category { Name = "Wiedza o Społeczeństwie" },
+                    new Category.Category { Name = "Literatura" },
+                    new Category.Category { Name = "Sztuka" },
+                    new Category.Category { Name = "Muzyka" },
+                    new Category.Category { Name = "Religia" },
+                    new Category.Category { Name = "Przedsiębiorczość" },
+                    new Category.Category { Name = "Edukacja dla Bezpieczeństwa" },
+                    new Category.Category { Name = "Wychowanie Fizyczne" }
                 );
                     context.SaveChanges();
                 }

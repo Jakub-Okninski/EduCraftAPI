@@ -509,12 +509,22 @@ namespace EduCraftAPI.Controllers
                 Quiz newQuiz = await _generateService.generateQuizDataText(quizRequest.Description, quizRequest.Title, quiz, quizRequest.CountElements);
                 if (newQuiz.Questions.Count<=0)
                 {
-                    return NoContent();
+                    Answer localAnswer = new Answer() { Name = "Default Answer", IsCorrect = false };
+                    Question localQuestion = new Question()
+                    {
+                        Name="Default question",
+                        Answers = new List<Answer>(),            
+                    };
+                    localQuestion.Answers.Add(localAnswer);
+                    newQuiz.Questions.Add(localQuestion);
                 }
             
                 _context.Quizzes.Add(newQuiz);
                 _context.SaveChanges();
-            
+                if (newQuiz.Questions.Count <= 1)
+                {
+                    return NoContent();
+                }
                 try
                 {
                     newQuiz = await _generateService.generateQuizDataImage(newQuiz, (int)_userContextService.GetUserID, newQuiz.QuizID, quizRequest.Description);

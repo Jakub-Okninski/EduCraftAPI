@@ -331,12 +331,15 @@ namespace EduCraftAPI.Controllers
                 Flashcards newFlashcards = await _generateService.generateFlashcardsDataText(createFlashcardsDto.Description, createFlashcardsDto.Title, flashcards, createFlashcardsDto.CountElements);
                 if (newFlashcards.Flashcard.Count <= 0)
                 {
-                    return NoContent();
+                    newFlashcards.Flashcard.Add(new Flashcard() { Title = "Default Title", Description = "Default Description" });
                 }
 
                 _context.Flashcards.Add(newFlashcards);
                 _context.SaveChanges();
-
+                if (newFlashcards.Flashcard.Count <= 1)
+                {
+                    return NoContent();
+                }
                 try
                 {
                     newFlashcards = await _generateService.generateFlashcardsDataImage(newFlashcards, (int)_userContextService.GetUserID, newFlashcards.FlashcardsID, createFlashcardsDto.Description);

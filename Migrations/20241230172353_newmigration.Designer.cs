@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduCraftAPI.Migrations
 {
     [DbContext(typeof(DataDbContext))]
-    [Migration("20241229185028_newmigration")]
+    [Migration("20241230172353_newmigration")]
     partial class newmigration
     {
         /// <inheritdoc />

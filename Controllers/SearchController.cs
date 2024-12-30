@@ -122,6 +122,7 @@ namespace EduCraftAPI.Controllers
                 ItemID = p.FlashcardsID,
                 Title = p.Title,
                 FirstName = p.User.FirstName,
+                LastName = p.User.LastName,
                 CreationDate = p.CreationDate,
                 CategoryName = p.Category.Name,
                 Type = type
@@ -191,6 +192,7 @@ namespace EduCraftAPI.Controllers
                 ItemID = p.QuizID,
                 Title = p.Name,
                 FirstName = p.User.FirstName,
+                LastName = p.User.LastName,
                 CreationDate = p.CreationDate,
                 CategoryName = p.Category.Name,
                 Type = type
@@ -259,6 +261,7 @@ namespace EduCraftAPI.Controllers
                 ItemID = p.PresentationsID,
                 Title = p.Title,
                 FirstName = p.User.FirstName,
+                LastName = p.User.LastName,
                 CreationDate = p.CreationDate,
                 CategoryName = p.Category.Name,
                 Type = type
@@ -274,7 +277,9 @@ namespace EduCraftAPI.Controllers
         [HttpGet("/category")]
         public IActionResult GetFlashcards()
         {
-            var categories = _context.Category.ToList();
+            var categories = _context.Category
+                .OrderBy(c => c.Name) 
+                .ToList();
 
             if (categories == null)
             {

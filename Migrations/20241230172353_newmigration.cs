@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EduCraftAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class myInit : Migration
+    public partial class newmigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -154,7 +154,7 @@ namespace EduCraftAPI.Migrations
                 name: "Cards",
                 columns: table => new
                 {
-                    FlashcardID = table.Column<int>(type: "int", nullable: false)
+                    CardID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -163,7 +163,7 @@ namespace EduCraftAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Cards", x => x.FlashcardID);
+                    table.PrimaryKey("PK_Cards", x => x.CardID);
                     table.ForeignKey(
                         name: "FK_Cards_Flashcards_FlashcardsID",
                         column: x => x.FlashcardsID,
