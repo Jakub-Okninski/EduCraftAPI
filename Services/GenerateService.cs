@@ -188,7 +188,7 @@ namespace EduCraftAPI.Services
                         if (el.Id == 2)
                         {
                             el.Size.Width = 550;
-                            el.Size.Height = 330;
+                            el.Size.Height = 350;
 
                         }
 
@@ -231,7 +231,7 @@ namespace EduCraftAPI.Services
                 model = "gpt-4o-mini",
                 messages = new[]
                 {
-                new { role = "user", content = $"Utwórz slajdy na podany temat, temat to: {descriptionPresentation}. Maksymalna liczna slajdów to:{countElements}. Wymagana struktura to: tytuł slajdu $$$ zawartość slajdu ###. Maksymalnie trzy zdania zawartości. tytuł slajdu od zawartość slajdu oddziel $$$ a poszczególne slajdy ###, nic poza tym. Przykład schematu: Java $$$ To najpopularniejszy język programowania. ### " }
+                new { role = "user", content = $"Utwórz slajdy na podany temat, temat to: {descriptionPresentation}. Maksymalna liczna slajdów to:{countElements}. Wymagana struktura to: tytuł slajdu $$$ zawartość slajdu ###. Zawartość slajdu niech składa sie z 3 zdań złożonych. tytuł slajdu od zawartość slajdu oddziel $$$ a poszczególne slajdy ###, nic poza tym. Przykład schematu: Java $$$ To najpopularniejszy język programowania ### " }
             },
                 max_tokens = 580,
                 temperature = 1.0,
@@ -397,13 +397,15 @@ namespace EduCraftAPI.Services
                             elementData.Size = new Size()
                             {
                                 Width = 900,
-                                Height = 330,
+                                Height = 350,
                             };
+
                             elementData.Type = "text";
                             elementData.Id = 2;
                             elementData.Ops = new List<Op>();
                             Op op2 = new Op();
                             op2.Insert = content;
+                            op2.Attributes = new Attributes() { Size = "large" };
                             elementData.Ops.Add(op2);
                             newSlide.Elements.Add(elementTitle);
                             newSlide.Elements.Add(elementData);

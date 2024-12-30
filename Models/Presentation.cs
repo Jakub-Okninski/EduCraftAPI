@@ -34,6 +34,7 @@
         [XmlArrayItem("Op")]
         public List<Op>? Ops { get; set; }
         public string? PathName { get; set; }
+        [XmlElement("CompressedFile")]
         public string? Url { get; set; }
 
         public override string ToString()
