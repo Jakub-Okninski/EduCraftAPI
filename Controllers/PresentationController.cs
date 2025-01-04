@@ -448,7 +448,7 @@ namespace EduCraftAPI.Controllers
             Presentation presentationData = null;
             try
             {
-                presentationData = await _generateService.generatePresentationDataText(request.Description, request.Title, request.CountElements, user);
+                presentationData = await _generateService.GeneratePresentationDataText(request.Description, request.Title, request.CountElements, user);
             }
             catch (Exception ex)
             {
@@ -485,7 +485,7 @@ namespace EduCraftAPI.Controllers
 
             try
             {
-                presentationData = await _generateService.generatePresentationDataImage(presentationData, (int)_userContextService.GetUserID, presentation.PresentationsID, request.Description);
+                presentationData = await _generateService.GeneratePresentationDataImage(presentationData, (int)_userContextService.GetUserID, presentation.PresentationsID, request.Description);
             }
             catch (Exception ex)
             {

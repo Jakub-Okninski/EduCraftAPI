@@ -14,11 +14,11 @@ namespace EduCraftAPI.Services
 {
     public interface IGenerateService
     {
-        public Task<Models.Presentation> generatePresentationDataText(string descriptionPresentation, string titleMain, int countElements, User user);
-        public Task<Presentation> generatePresentationDataImage(Presentation presentation, int UserID, int fileID, string titleMain);
-        public Task<String> generateAnswer(string prompt);
-        public Task<List<String>> generatePicture(string prompt, int userID);
-        public Task<Quiz> generateQuizDataText(string descriptionQuiz, string titleMain, Quiz quiz, int countElements);
+        public Task<Models.Presentation> GeneratePresentationDataText(string descriptionPresentation, string titleMain, int countElements, User user);
+        public Task<Presentation> GeneratePresentationDataImage(Presentation presentation, int UserID, int fileID, string titleMain);
+        public Task<String> GenerateAnswer(string prompt);
+        public Task<List<String>> GeneratePicture(string prompt, int userID);
+        public Task<Quiz> GenerateQuizDataText(string descriptionQuiz, string titleMain, Quiz quiz, int countElements);
         public Task<Quiz> generateQuizDataImage(Quiz quiz, int UserID, int fileID, string titleMain);
         public Task<Flashcards> generateFlashcardsDataText(string descriptionFlashcards, string titleMain, Flashcards flashcards, int countElements);
         public Task<Flashcards> generateFlashcardsDataImage(Flashcards flashcards, int UserID, int fileID, string titleMain);
@@ -34,12 +34,10 @@ namespace EduCraftAPI.Services
             _fileService = fileService;
             _apiKey = configuration["ApiKeys:myKey"]!;
         } 
-        public async Task<String> generateAnswer(string prompt)
+        public async Task<String> GenerateAnswer(string prompt)
         {
 
             string apiUrl = "https://api.openai.com/v1/chat/completions";
-            Debug.WriteLine(prompt);
-
             var requestBody = new
             {
                 model = "gpt-4o-mini",
@@ -67,21 +65,11 @@ namespace EduCraftAPI.Services
                     string responseContent = await response.Content.ReadAsStringAsync();
                     dynamic responseObject = JsonConvert.DeserializeObject(responseContent);
                     input = responseObject.choices[0].message.content;
-
-                    Debug.WriteLine("Wygenerowane dane:");
-                    Debug.WriteLine(input);
-               
-                }
-                else
-                {
-                    Debug.WriteLine($"Błąd: {response.StatusCode}");
                 }
             }
             return input;
-
-
         }
-        public async Task<List<String>> generatePicture(string prompt, int userID)
+        public async Task<List<String>> GeneratePicture(string prompt, int userID)
         {
             string apiUrl = "https://api.openai.com/v1/images/generations";
 
@@ -120,7 +108,7 @@ namespace EduCraftAPI.Services
             }
             return imageUrls;
         }
-        public async Task<Presentation> generatePresentationDataImage(Presentation presentation, int UserID, int fileID, string titleMain)
+        public async Task<Presentation> GeneratePresentationDataImage(Presentation presentation, int UserID, int fileID, string titleMain)
         {
                
             List<String> imageUrls = new List<String>();
@@ -214,7 +202,7 @@ namespace EduCraftAPI.Services
             }
             return presentation;
         }
-        public async Task<Models.Presentation> generatePresentationDataText(string descriptionPresentation, string titleMain, int countElements, User user)
+        public async Task<Models.Presentation> GeneratePresentationDataText(string descriptionPresentation, string titleMain, int countElements, User user)
         {
             Presentation presentationData = new Presentation();
             presentationData.Slides = new List<Slide>();
@@ -485,7 +473,7 @@ namespace EduCraftAPI.Services
             return presentationData;
          
         }
-        public async Task<Quiz> generateQuizDataText(string descriptionQuiz, string titleMain,  Quiz quiz, int countElements)
+        public async Task<Quiz> GenerateQuizDataText(string descriptionQuiz, string titleMain,  Quiz quiz, int countElements)
         {
             string apiUrl = "https://api.openai.com/v1/chat/completions";
             Debug.WriteLine(descriptionQuiz);

@@ -35,7 +35,7 @@ namespace EduCraftAPI.Controllers
             {
                 try
                 {
-                    var answer = await _generateService.generatePicture(massage.data, (int)_userContextService.GetUserID);
+                    var answer = await _generateService.GeneratePicture(massage.data, (int)_userContextService.GetUserID);
                     if (answer == null || answer.Count == 0)
                     {
                         return NoContent();
@@ -54,7 +54,7 @@ namespace EduCraftAPI.Controllers
             {
                 try
                 {
-                    var answer = await _generateService.generateAnswer(massage.data);
+                    var answer = await _generateService.GenerateAnswer(massage.data);
                     return Ok(new { type = false, value = answer });
                 }
                 catch (Exception ex)

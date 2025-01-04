@@ -103,7 +103,6 @@ namespace EduCraftAPI.Services
         }
         public byte[] GenerateQuiz(Quiz quiz, bool withCorrect = false)
         {
-            var folderPath = Path.Combine("UserDataImage", "User" + quiz.UserID, "Quiz" + quiz.QuizID);
             XWPFDocument doc = new XWPFDocument();
             XWPFParagraph mainParagraph = doc.CreateParagraph();
             mainParagraph.Alignment = NPOI.XWPF.UserModel.ParagraphAlignment.CENTER;
@@ -112,6 +111,7 @@ namespace EduCraftAPI.Services
             mainRun.IsBold = true;
             mainRun.FontSize = 16;
 
+            var folderPath = Path.Combine("UserDataImage", "User" + quiz.UserID, "Quiz" + quiz.QuizID);
             foreach (var question in quiz.Questions)
             {
                 XWPFParagraph questionParagraph = doc.CreateParagraph();

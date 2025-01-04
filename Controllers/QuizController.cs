@@ -506,7 +506,7 @@ namespace EduCraftAPI.Controllers
                     Questions = new List<Question>()
                 };
 
-                Quiz newQuiz = await _generateService.generateQuizDataText(quizRequest.Description, quizRequest.Title, quiz, quizRequest.CountElements);
+                Quiz newQuiz = await _generateService.GenerateQuizDataText(quizRequest.Description, quizRequest.Title, quiz, quizRequest.CountElements);
                 if (newQuiz.Questions.Count<=0)
                 {
                     Answer localAnswer = new Answer() { Name = "Default Answer", IsCorrect = false };

@@ -151,7 +151,7 @@ namespace EduCraftAPI.Services
                 System.IO.File.Delete(filePath);
             }   
         }
-        public string SaveFileImgQuiz(int userID, int QuizID, IFormFile file)
+        public string SaveFileImgQuiz(int userID, int quizID, IFormFile file)
         {
             string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "UserDataImage", "User" + userID);
 
@@ -159,13 +159,11 @@ namespace EduCraftAPI.Services
             {
                 Directory.CreateDirectory(uploadsFolder);
             }
-            uploadsFolder = Path.Combine(uploadsFolder, "Quiz" + QuizID);
+            uploadsFolder = Path.Combine(uploadsFolder, "Quiz" + quizID);
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
             }
-
-
             var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
             var filePath = Path.Combine(uploadsFolder, fileName);
             using (var stream = new FileStream(filePath, FileMode.Create))

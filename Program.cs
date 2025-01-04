@@ -30,7 +30,7 @@ namespace EduCraftAPI
                      
                     });
             });
-            // Add services to the container.
+
             var authenticationSetting = new AuthenticationSettings();
             builder.Services.AddSingleton(authenticationSetting);
 
@@ -56,9 +56,6 @@ namespace EduCraftAPI
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSetting.JwtKey)),
                 };
             });
-
-
-          
             builder.Configuration.GetSection("Authentication").Bind(authenticationSetting);
             
             builder.Services.AddScoped<IFileService, FileService>();
