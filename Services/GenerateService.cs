@@ -16,12 +16,12 @@ namespace EduCraftAPI.Services
     {
         public Task<Models.Presentation> GeneratePresentationDataText(string descriptionPresentation, string titleMain, int countElements, User user);
         public Task<Presentation> GeneratePresentationDataImage(Presentation presentation, int UserID, int fileID, string titleMain);
+        public Task<Quiz> GenerateQuizDataText(string descriptionQuiz, string titleMain, Quiz quiz, int countElements);
+        public Task<Quiz> GenerateQuizDataImage(Quiz quiz, int UserID, int fileID, string titleMain);
+        public Task<Flashcards> GenerateFlashcardsDataText(string descriptionFlashcards, string titleMain, Flashcards flashcards, int countElements);
+        public Task<Flashcards> GenerateFlashcardsDataImage(Flashcards flashcards, int UserID, int fileID, string titleMain);
         public Task<String> GenerateAnswer(string prompt);
         public Task<List<String>> GeneratePicture(string prompt, int userID);
-        public Task<Quiz> GenerateQuizDataText(string descriptionQuiz, string titleMain, Quiz quiz, int countElements);
-        public Task<Quiz> generateQuizDataImage(Quiz quiz, int UserID, int fileID, string titleMain);
-        public Task<Flashcards> generateFlashcardsDataText(string descriptionFlashcards, string titleMain, Flashcards flashcards, int countElements);
-        public Task<Flashcards> generateFlashcardsDataImage(Flashcards flashcards, int UserID, int fileID, string titleMain);
     }
     public class GenerateService : IGenerateService
     {
@@ -564,7 +564,7 @@ namespace EduCraftAPI.Services
             }
             return quiz;
         }
-        public async Task<Quiz> generateQuizDataImage(Quiz quiz, int UserID, int fileID, string titleMain)
+        public async Task<Quiz> GenerateQuizDataImage(Quiz quiz, int UserID, int fileID, string titleMain)
         {
             var imageUrls = new List<string>();
             string apiUrl = "https://api.openai.com/v1/images/generations";
@@ -616,7 +616,7 @@ namespace EduCraftAPI.Services
             }
             return quiz;
         }
-        public async Task<Flashcards> generateFlashcardsDataText(string descriptionFlashcards, string titleMain, Flashcards flashcards, int countElements)
+        public async Task<Flashcards> GenerateFlashcardsDataText(string descriptionFlashcards, string titleMain, Flashcards flashcards, int countElements)
         {
             string apiUrl = "https://api.openai.com/v1/chat/completions";
             Debug.WriteLine(descriptionFlashcards);
@@ -680,7 +680,7 @@ namespace EduCraftAPI.Services
             }
             return flashcards;
         }
-        public async Task<Flashcards> generateFlashcardsDataImage(Flashcards flashcards, int UserID, int fileID, string titleMain)
+        public async Task<Flashcards> GenerateFlashcardsDataImage(Flashcards flashcards, int UserID, int fileID, string titleMain)
         {
             var imageUrls = new List<string>();
             string apiUrl = "https://api.openai.com/v1/images/generations";

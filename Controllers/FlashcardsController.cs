@@ -328,7 +328,7 @@ namespace EduCraftAPI.Controllers
                     Flashcard = new List<Flashcard>()
                 };
 
-                Flashcards newFlashcards = await _generateService.generateFlashcardsDataText(createFlashcardsDto.Description, createFlashcardsDto.Title, flashcards, createFlashcardsDto.CountElements);
+                Flashcards newFlashcards = await _generateService.GenerateFlashcardsDataText(createFlashcardsDto.Description, createFlashcardsDto.Title, flashcards, createFlashcardsDto.CountElements);
                 if (newFlashcards.Flashcard.Count <= 0)
                 {
                     newFlashcards.Flashcard.Add(new Flashcard() { Title = "Default Title", Description = "Default Description" });
@@ -342,7 +342,7 @@ namespace EduCraftAPI.Controllers
                 }
                 try
                 {
-                    newFlashcards = await _generateService.generateFlashcardsDataImage(newFlashcards, (int)_userContextService.GetUserID, newFlashcards.FlashcardsID, createFlashcardsDto.Description);
+                    newFlashcards = await _generateService.GenerateFlashcardsDataImage(newFlashcards, (int)_userContextService.GetUserID, newFlashcards.FlashcardsID, createFlashcardsDto.Description);
                     _context.SaveChanges();
                 }
                 catch(Exception e)

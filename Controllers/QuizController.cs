@@ -527,7 +527,7 @@ namespace EduCraftAPI.Controllers
                 }
                 try
                 {
-                    newQuiz = await _generateService.generateQuizDataImage(newQuiz, (int)_userContextService.GetUserID, newQuiz.QuizID, quizRequest.Description);
+                    newQuiz = await _generateService.GenerateQuizDataImage(newQuiz, (int)_userContextService.GetUserID, newQuiz.QuizID, quizRequest.Description);
                     _context.SaveChanges();
                 }
                 catch (Exception e)
