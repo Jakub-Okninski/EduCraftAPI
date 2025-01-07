@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EduCraftAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class newmigration : Migration
+    public partial class mylastmigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

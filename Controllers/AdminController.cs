@@ -21,8 +21,6 @@ namespace EduCraftAPI.Controllers
             _userContextService = userContextService;
         }
 
-
-
         [HttpPost("/admin/user/update")]
         public IActionResult updatePresentation([FromBody] IsBlockedDTO isBlockedDTO)
         {

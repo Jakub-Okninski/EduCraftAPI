@@ -15,8 +15,6 @@ namespace EduCraftAPI.Controllers
             _context = context;
         }
 
-
-
         [HttpPut("/answer/edit")]
         public async Task<IActionResult> UpdateAnswer([FromBody] Answer newAnswer)
         {

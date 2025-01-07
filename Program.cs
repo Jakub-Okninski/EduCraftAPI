@@ -1,4 +1,3 @@
-
 using EduCraftAPI.Data;
 using EduCraftAPI.Entities;
 using EduCraftAPI.Entities.User;
@@ -14,7 +13,6 @@ namespace EduCraftAPI
     {
         public static void Main(string[] args)
         {
-
 
             var builder = WebApplication.CreateBuilder(args);
             var allowedOrigins = builder.Configuration["AllowedOrigins"];
@@ -86,7 +84,6 @@ namespace EduCraftAPI
 
                 SeedData.Initialize(services);
             }
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

@@ -43,7 +43,7 @@ namespace EduCraftAPI.Services
                 model = "gpt-4o-mini",
                 messages = new[]
                 {
-                new { role = "user", content = $"Jesteś asystentem. Odpowiedz w max 1 zdaniu. Tresc: {prompt}" }
+                new { role = "user", content = $"Jesteś asystentem. Odpowiedz w max 2 zdaniach. Tresc: {prompt}" }
             },
                 max_tokens = 150,
                 temperature = 1.0,
@@ -113,7 +113,6 @@ namespace EduCraftAPI.Services
                
             List<String> imageUrls = new List<String>();
 
-          
             string apiUrl = "https://api.openai.com/v1/images/generations";
 
             var requestBody = new
@@ -123,7 +122,6 @@ namespace EduCraftAPI.Services
                 n = 2,
                 size = "256x256"
             };
-
 
             string jsonRequest = JsonConvert.SerializeObject(requestBody);
 
@@ -212,7 +210,6 @@ namespace EduCraftAPI.Services
                 countElements = 10;
             }
             string apiUrl = "https://api.openai.com/v1/chat/completions";
-            Debug.WriteLine(descriptionPresentation);
 
             var requestBody = new
             {
@@ -221,7 +218,7 @@ namespace EduCraftAPI.Services
                 {
                 new { role = "user", content = $"Utwórz slajdy na podany temat, temat to: {descriptionPresentation}. Maksymalna liczna slajdów to:{countElements}. Wymagana struktura to: tytuł slajdu $$$ zawartość slajdu ###. Zawartość slajdu niech składa sie z 3 zdań złożonych. tytuł slajdu od zawartość slajdu oddziel $$$ a poszczególne slajdy ###, nic poza tym. Przykład schematu: Java $$$ To najpopularniejszy język programowania ### " }
             },
-                max_tokens = 580,
+                max_tokens = 800,
                 temperature = 1.0,
                 top_p = 1.0,
                 frequency_penalty = 0.0,
@@ -489,7 +486,7 @@ namespace EduCraftAPI.Services
                 {
                 new { role = "user", content = $"Utwórz pytania do quizu na podany temat, temat to: {descriptionQuiz}. Maksymalna liczba pytań to: {countElements}. Maksymalnie po jednym zdaniu na pytanie i odpowiedzi. pytanie od odpowiedzi oddziel $$$, poszczególne pytania ### a poszczególne odpowiedzi oddziel &&&. Jeśli jest poprawna dodaj odp+, nic poza tym. Przykład schematu:  Ile to 2+2? $$$ 3 &&&odp+ 4  &&& 5 ###. niczego nie numeruj" }
             },
-                max_tokens = 300,
+                max_tokens = 400,
                 temperature = 1.0,
                 top_p = 1.0,
                 frequency_penalty = 0.0,
@@ -631,7 +628,7 @@ namespace EduCraftAPI.Services
                 {
                 new { role = "user", content = $"Utwórz fiszki na podany temat, temat to: {descriptionFlashcards}. Maksymalna liczba fiszek to: {countElements}. Hasło od Opisu oddziel &&& a poszczególne fiszki oddziel ###, nic poza tym. Maksymalnie po jednym zdaniu na hasło i opis. Przykład: Java &&& Język programowania ###" }
             },
-                max_tokens = 200,
+                max_tokens = 300,
                 temperature = 1.0,
                 top_p = 1.0,
                 frequency_penalty = 0.0,

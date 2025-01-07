@@ -199,7 +199,7 @@ namespace EduCraftAPI.Services
                 XWPFTableCell titleCell = table.GetRow(0).GetCell(0);
                 titleCell.RemoveParagraph(0);
                 titleCell.SetVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
-
+               
 
 
                 string titleText = card.Title;
@@ -377,13 +377,10 @@ namespace EduCraftAPI.Services
                                 });
                             });
                         }
-
                         else
                         {
                             table.Cell().Height(250).Padding(10).Border(1).BorderColor(Colors.Grey.Medium).AlignMiddle().AlignCenter().Text(card.Description).FontSize(18).Bold();
-
                         }
-
                     }
                     table.Cell().Height(250).Padding(10).Border(1).BorderColor(Colors.Grey.Medium).AlignMiddle().AlignCenter().Text(card.Description).FontSize(18).Bold();
                 }
