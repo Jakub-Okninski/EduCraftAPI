@@ -216,7 +216,7 @@ namespace EduCraftAPI.Services
                 model = "gpt-4o-mini",
                 messages = new[]
                 {
-                new { role = "user", content = $"Utwórz slajdy na podany temat, temat to: {descriptionPresentation}. Maksymalna liczna slajdów to:{countElements}. Wymagana struktura to: tytuł slajdu $$$ zawartość slajdu ###. Zawartość slajdu niech składa sie z 3 zdań złożonych. tytuł slajdu od zawartość slajdu oddziel $$$ a poszczególne slajdy ###, nic poza tym. Przykład schematu: Java $$$ To najpopularniejszy język programowania ### " }
+                new { role = "user", content = $"Utwórz slajdy na podany temat, temat to: {descriptionPresentation}. Maksymalna liczna slajdów to:{countElements}. Wymagana struktura to: tytuł slajdu $$$ zawartość slajdu ###. Zawartość slajdu niech składa sie od 3 do 4 zdań. Tytuł slajdu od zawartość slajdu oddziel $$$ a poszczególne slajdy oddziel ###. Nic poza tym. Przykład schematu: Java $$$ To najpopularniejszy język programowania ### " }
             },
                 max_tokens = 800,
                 temperature = 1.0,
