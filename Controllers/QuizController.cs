@@ -71,11 +71,15 @@ namespace EduCraftAPI.Controllers
                 if (quiz.RandomQuestion)
                 {
                     Random random = new Random();
+                    quiz.Questions = quiz.Questions.OrderBy(q => random.Next()).ToList();
+                }
+                if (quiz.RandomAnswear)
+                {
+                    Random random = new Random();
                     foreach (var question in quiz.Questions)
                     {
                         question.Answers = question.Answers.OrderBy(q => random.Next()).ToList();
                     }
-                    quiz.Questions = quiz.Questions.OrderBy(q => random.Next()).ToList();
                 }
 
                 if (quiz.Questions.Count >= quiz.CountQuestions)
@@ -225,6 +229,7 @@ namespace EduCraftAPI.Controllers
                Name = p.Name,
                UserID = p.UserID,
                RandomQuestion = p.RandomQuestion,
+               RandomAnswear=p.RandomAnswear,
                CountQuestions = p.CountQuestions,
                Questions = p.Questions.Select(q => new Question
                {
@@ -246,12 +251,17 @@ namespace EduCraftAPI.Controllers
             }
             if (quiz.RandomQuestion)
             {
+                Random random = new Random();  
+                quiz.Questions = quiz.Questions.OrderBy(q => random.Next()).ToList();
+            }
+
+            if (quiz.RandomAnswear)
+            {
                 Random random = new Random();
                 foreach (var question in quiz.Questions)
                 {
                     question.Answers = question.Answers.OrderBy(q => random.Next()).ToList();
                 }
-                quiz.Questions = quiz.Questions.OrderBy(q => random.Next()).ToList();
             }
 
             if (quiz.Questions.Count >= quiz.CountQuestions)
@@ -314,7 +324,7 @@ namespace EduCraftAPI.Controllers
             }
             return Ok(quiz);
         }
-        [HttpPost("/quiz/update/random")]
+        [HttpPost("/quiz/update/random/question")]
         public IActionResult updateRandom([FromBody] RandomDTO randomDTO)
         {
             var quiz = _context.Quizzes.FirstOrDefault(u => u.QuizID == randomDTO.QuizID);
@@ -325,6 +335,25 @@ namespace EduCraftAPI.Controllers
             try
             {
                 quiz.RandomQuestion = randomDTO.RandomQuestion;
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wewnętrzny błąd serwera.");
+            }
+            return Ok(quiz);
+        }
+        [HttpPost("/quiz/update/random/answear")]
+        public IActionResult updateRandomAnswear([FromBody] RandomDTOAnswear randomDTO)
+        {
+            var quiz = _context.Quizzes.FirstOrDefault(u => u.QuizID == randomDTO.QuizID);
+            if (quiz == null)
+            {
+                return NoContent();
+            }
+            try
+            {
+                quiz.RandomAnswear = randomDTO.RandomAnswear;
                 _context.SaveChanges();
             }
             catch (Exception ex)

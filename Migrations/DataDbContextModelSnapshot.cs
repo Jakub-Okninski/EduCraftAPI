@@ -209,6 +209,9 @@ namespace EduCraftAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("RandomAnswear")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("RandomQuestion")
                         .HasColumnType("bit");
 

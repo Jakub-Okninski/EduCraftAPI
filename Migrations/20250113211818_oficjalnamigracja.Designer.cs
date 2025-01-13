@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduCraftAPI.Migrations
 {
     [DbContext(typeof(DataDbContext))]
-    [Migration("20250107140234_mylastmigration")]
-    partial class mylastmigration
+    [Migration("20250113211818_oficjalnamigracja")]
+    partial class oficjalnamigracja
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -211,6 +211,9 @@ namespace EduCraftAPI.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("RandomAnswear")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("RandomQuestion")
                         .HasColumnType("bit");

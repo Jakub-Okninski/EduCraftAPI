@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EduCraftAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class mylastmigration : Migration
+    public partial class oficjalnamigracja : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -130,6 +130,7 @@ namespace EduCraftAPI.Migrations
                     UserID = table.Column<int>(type: "int", nullable: false),
                     IsPublic = table.Column<bool>(type: "bit", nullable: false),
                     RandomQuestion = table.Column<bool>(type: "bit", nullable: false),
+                    RandomAnswear = table.Column<bool>(type: "bit", nullable: false),
                     CountQuestions = table.Column<int>(type: "int", nullable: false),
                     CategoryID = table.Column<int>(type: "int", nullable: false)
                 },

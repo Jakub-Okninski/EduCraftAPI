@@ -12,6 +12,7 @@
         public int UserID { get; set; }
         public Boolean IsPublic { get; set; }
         public Boolean RandomQuestion { get; set; } = false;
+        public Boolean RandomAnswear { get; set; } = false; 
         public int CountQuestions { get; set; } = 0;
         public int CategoryID { get; set; }
         public Category Category { get; set; }
