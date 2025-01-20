@@ -484,9 +484,9 @@ namespace EduCraftAPI.Services
                 model = "gpt-4o-mini",
                 messages = new[]
                 {
-                new { role = "user", content = $"Utwórz pytania do quizu na podany temat, temat to: {descriptionQuiz}. Maksymalna liczba pytań to: {countElements}. Maksymalnie po jednym zdaniu na pytanie i odpowiedzi. pytanie od odpowiedzi oddziel $$$, poszczególne pytania ### a poszczególne odpowiedzi oddziel &&&. Jeśli jest poprawna dodaj odp+, nic poza tym. Przykład schematu:  Ile to 2+2? $$$ 3 &&&odp+ 4  &&& 5 ###. niczego nie numeruj" }
+                new { role = "user", content = $"Utwórz pytania do quizu na podany temat, temat to: {descriptionQuiz}. Maksymalna liczba pytań to: {countElements}. Maksymalnie po jednym zdaniu na pytanie i odpowiedzi. pytanie od odpowiedzi oddziel $$$, poszczególne pytania ### a poszczególne odpowiedzi oddziel &&&. Jeśli jest poprawna dodaj odp+, nic poza tym. Przykład schematu:  Ile to 2+2? $$$ 3 &&&odp+ 4  &&& 5 $$$ Ile to 5+8 &&& 9 &&& 10 &&&odp+ 13 &&& 20" }
             },
-                max_tokens = 400,
+                max_tokens = 600,
                 temperature = 1.0,
                 top_p = 1.0,
                 frequency_penalty = 0.0,
@@ -515,7 +515,6 @@ namespace EduCraftAPI.Services
                     Debug.WriteLine($"Błąd: {response.StatusCode}");
                 }
             }
-
             string[] questions = input.Split(new string[] { "###" }, StringSplitOptions.RemoveEmptyEntries);
             int number = 1;
             foreach (string q in questions)

@@ -266,7 +266,6 @@ namespace EduCraftAPI.Controllers
 
             if (quiz.Questions.Count >= quiz.CountQuestions)
             {
-                // Remove excess questions
                 quiz.Questions = quiz.Questions.Take(quiz.CountQuestions).ToList();
             }
 
