@@ -484,7 +484,7 @@ namespace EduCraftAPI.Services
                 model = "gpt-4o-mini",
                 messages = new[]
                 {
-                new { role = "user", content = $"Utwórz pytania do quizu na podany temat, temat to: {descriptionQuiz}. Maksymalna liczba pytań to: {countElements}. Maksymalnie po jednym zdaniu na pytanie i odpowiedzi. pytanie od odpowiedzi oddziel $$$, poszczególne pytania ### a poszczególne odpowiedzi oddziel &&&. Jeśli jest poprawna dodaj odp+, nic poza tym. Przykład schematu:  Ile to 2+2? $$$ 3 &&&odp+ 4  &&& 5 $$$ Ile to 5+8 &&& 9 &&& 10 &&&odp+ 13 &&& 20" }
+                new { role = "user", content = $"Utwórz quiz na podany temat, temat to: {descriptionQuiz}. Maksymalna liczba pytań w quizie to: {countElements}. Maksymalnie po jednym zdaniu na pytanie i odpowiedzi. Pytanie od możliwych odpowiedzi oddziel $$$, poszczególne pytania odziel ### a poszczególne odpowiedzi oddziel &&&. Jeśli jest poprawna odpowiedz dodaj odp+. Poszczególne pytania muszą być oddzielone od siebie za pomocą ###. Przykład wymaganego formatu danych: Ile to 2+2? $$$ 3 &&& 8 &&&odp+ 4 &&& 6 &&& 5 ### Ile to 5+8? $$$ 9 &&& 10 &&&odp+ 13 &&& 20 ###" }
             },
                 max_tokens = 600,
                 temperature = 1.0,
